@@ -2,12 +2,275 @@
 <config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/shopware/shopware/5.3/engine/Shopware/Components/Plugin/schema/config.xsd">
     <elements>
-        <element>
-            <name>slogan</name>
-            <label>Your slogan</label>
-            <label lang="de">Dein Slogan</label>
-            <value>XML is fun!</value>
-            <description>This slogan will be shown on the storefront</description>
+        <element scope="shop" type="number">
+            <name>maxArticle</name>
+            <label lang="de">Maximale Artikel-Anzahl im Slider</label>
+            <label>maximum number of articles in the slider</label>
+            <value>20</value>
+            <options>
+                <minValue>1</minValue>
+            </options>
+        </element>
+        <element scope="shop" type="select">
+            <name>variantsGroup</name>
+            <label>exclude variant groups</label>
+            <label lang="de">Varianten-Gruppen ausschließen</label>
+            <description lang="de">Wählen Sie z.B. Größe um zu verhindert, dass Füllartikel der Größe S vorgeschlagen werden, wenn im Warenkorb Artikel der Größe XL liegen.</description>
+            <description>Choose e.g. size to avoid that filling articles of size S are suggested if the shopping cart contains articles of size XL.</description>
+            <store>
+                <![CDATA[Ext.define('Me.Netzhirsch.Form', {
+                extend: 'Ext.data.Store',
+                fields: [
+                    { name:'id', type: 'int' },
+                    { name:'name', type: 'string' }
+                ],
+                autoLoad: true,
+                pageSize: 25,
+                proxy: {
+                    type: 'ajax',
+                    url: window.location.href.substr(0
+                        , window.location.href.indexOf('backend')) + 'backend/PluginConfig/getVariantGroups',
+                    reader: {
+                        type: 'json',
+                        root: 'data',
+                        totalProperty: 'total'
+                    }
+                }
+                }).create();//new ]]>
+            </store>
+            <options>
+                <multiSelect>true</multiSelect>
+                <valueField>id</valueField>
+                <displayField>name</displayField>
+            </options>
+        </element>
+        <element scope="shop" type="select">
+            <name>productStream</name>
+            <label>product stream</label>
+            <label lang="de">Product Streams berücksichtigen</label>
+            <description lang="de">Füllartikel ausschließlich aus diesen Product Streams wählen.</description>
+            <description>Choose filling articles exclusively from these product streams.</description>
+            <store>
+                <![CDATA[Ext.define('Me.Netzhirsch.Form', {
+                extend: 'Ext.data.Store',
+                fields: [
+                    { name:'id', type: 'int' },
+                    { name:'name', type: 'string' }
+                ],
+                autoLoad: true,
+                pageSize: 25,
+                proxy: {
+                    type: 'ajax',
+                    url: window.location.href.substr(0
+                        , window.location.href.indexOf('backend')) + 'backend/PluginConfig/getProductStreams',
+                    reader: {
+                        type: 'json',
+                        root: 'data',
+                        totalProperty: 'total'
+                    }
+                }
+                }).create();//new ]]>
+            </store>
+            <options>
+                <multiSelect>true</multiSelect>
+                <valueField>id</valueField>
+                <displayField>name</displayField>
+            </options>
+        </element>
+        <element scope="shop" type="boolean">
+            <name>combinations</name>
+            <label lang="de">Kombinationen</label>
+            <label>combinations</label>
+            <description lang="de">Auch Füllartikel anzeigen, die alleine nicht die Versandkosten-Freigrenze erreichen.</description>
+            <description>Also show filling articles which alone do not reach the free shipping limit.</description>
+        </element>
+        <element scope="shop" type="number">
+            <name>minimumArticlePrice</name>
+            <label lang="de">Minimaler Artikelpreis</label>
+            <label>minimum article price</label>
+            <description lang="de">Minimaler Preis für Artikel, die alleine nicht die Versandkosten-Freigrenze erreichen.</description>
+            <description>Minimum price for articles which alone do not reach the free shipping limit.</description>
+            <options>
+                <minValue>0</minValue>
+            </options>
+        </element>
+        <element scope="shop" type="combo">
+            <name>minimumArticlePriceUnit</name>
+            <label lang="de">Minimaler Artikelpreis Einheit</label>
+            <label>Minimum article price unit</label>
+            <description lang="de">Die Prozentangabe bezieht sich auf den fehlenden Restbetrag zur Versandkosten-Freigrenze.</description>
+            <description>The percentage refers to the missing balance to the shipping cost exemption limit.</description>
+            <store>
+                <option>
+                    <value>€</value>
+                    <label>€</label>
+                </option>
+                <option>
+                    <value>%</value>
+                    <label>%</label>
+                </option>
+            </store>
+        </element>
+        <element scope="shop" type="number">
+            <name>maximumArticlePrice</name>
+            <label lang="de">Maximaler Artikelpreis</label>
+            <label>maximum article price</label>
+            <description lang="de">Maximaler Preis für Artikel, die alleine nicht die Versandkosten-Freigrenze erreichen.</description>
+            <description>maximum price for articles which alone do not reach the free shipping limit.</description>
+            <options>
+                <minValue>0</minValue>
+            </options>
+        </element>
+        <element scope="shop" type="combo">
+            <name>maximumArticlePriceUnit</name>
+            <label lang="de">Maximaler Artikelpreis Einheit</label>
+            <label>maximum price unit</label>
+            <description lang="de">Die Prozentangabe bezieht sich auf den fehlenden Restbetrag zur Versandkosten-Freigrenze.</description>
+            <description>The percentage refers to the missing balance to the shipping cost exemption limit.</description>
+            <store>
+                <option>
+                    <value>€</value>
+                    <label>€</label>
+                </option>
+                <option>
+                    <value>%</value>
+                    <label>%</label>
+                </option>
+            </store>
+        </element>
+        <element scope="shop" type="combo">
+            <name>consider</name>
+            <label lang="de">Für die Füllartikel berücksichtigen</label>
+            <label>for the filling articles consider</label>
+            <description lang="de">Es werden nur Artikel z.B. aus Kategorien angezeigt, die bereits im Warenkorb vertreten sind.</description>
+            <description>Only articles e.g. from categories that are already in the shopping cart are displayed.</description>
+            <store>
+                <option>
+                    <value> </value>
+                    <label> </label>
+                </option>
+                <option>
+                    <value>category</value>
+                    <label>category</label>
+                    <label lang="de">Kategorie</label>
+                </option>
+                <option>
+                    <value>manufacturer</value>
+                    <label>manufacturer</label>
+                    <label lang="de">Hersteller</label>
+                </option>
+                <option>
+                    <value>categoryAndManufacturer</value>
+                    <label>category and manufacturer</label>
+                    <label lang="de">Kategorie und Hersteller</label>
+                </option>
+                <option>
+                    <value>categoryOrManufacturer</value>
+                    <label>category or manufacturer</label>
+                    <label lang="de">Kategorie oder Hersteller</label>
+                </option>
+            </store>
+        </element>
+        <element scope="shop" type="select">
+        <name>excludedArticles</name>
+        <label>exclude articles</label>
+        <label lang="de">Artikel ausschließen</label>
+        <description lang="de">Diese Artikel werden nicht Füllartikel berücksichtigt.</description>
+        <description>These articles are not considered filling articles.</description>
+        <store>Shopware.apps.Base.store.Article</store>
+            <options>
+                <multiSelect>true</multiSelect>
+            </options>
+        </element>
+        <element scope="shop" type="boolean">
+            <name>customersAlsoBought</name>
+            <label lang="de">Füllartikel aus Artikel die Kunden auch kauft haben.</label>
+            <label>Filling articles from articles that customers have also bought.</label>
+        </element>
+        <element scope="shop" type="boolean">
+            <name>similarArticles</name>
+            <label lang="de">Füllartikel aus ähnliche Artikel</label>
+            <label>similar articles</label>
+        </element>
+        <element scope="shop" type="boolean">
+            <name>crossSelling</name>
+            <label lang="de">Füllartikel aus Cross Selling Artikeln</label>
+            <label>Filling articles from cross selling articles</label>
+        </element>
+        <element scope="shop" type="boolean">
+            <name>topSeller</name>
+            <label lang="de">Füllartikel aus Top Seller Artikeln</label>
+            <label>Filling articles from top seller articles</label>
+        </element>
+        <element scope="shop" type="combo">
+            <name>sorting</name>
+            <label lang="de">Sortierung von den Füllartikel</label>
+            <label>Sorting of the filling articles</label>
+            <value>randomly</value>
+            <store>
+                <option>
+                    <value>randomly</value>
+                    <label>randomly</label>
+                    <label lang="de">Zufällig</label>
+                </option>
+                <option>
+                    <value>price ascending</value>
+                    <label>price ascending</label>
+                    <label lang="de">Preis aufsteigend</label>
+                </option>
+                <option>
+                    <value>price descending</value>
+                    <label>price descending</label>
+                    <label lang="de">Preis absteigend</label>
+                </option>
+                <option>
+                    <value>votes descending</value>
+                    <label>votes descending</label>
+                    <label lang="de">Bewertungen aufsteigend</label>
+                </option>
+                <option>
+                    <value>stock ascending</value>
+                    <label>stock ascending</label>
+                    <label lang="de">Lagerbestand aufsteigend</label>
+                </option>
+                <option>
+                    <value>stock descending</value>
+                    <label>stock descending</label>
+                    <label lang="de">Lagerbestand absteigend</label>
+                </option>
+            </store>
+        </element>
+        <element scope="shop" type="boolean">
+            <name>viewInAjaxBasket</name>
+            <label>also in ajax basket</label>
+            <label lang="de">Anzeige im Ajax-Warenkorb</label>
+        </element>
+        <element scope="shop" type="combo">
+            <name>displayVariants</name>
+            <label lang="de">Anzeige Varianten</label>
+            <label>display variants</label>
+            <store>
+                <option>
+                    <value>show under the basket</value>
+                    <label>show under the basket</label>
+                    <label lang="de">Anzeige unter dem Warenkorb</label>
+                </option>
+                <option>
+                    <value>popup</value>
+                    <label>popup</label>
+                    <label lang="de">Popup</label>
+                </option>
+                <option>
+                    <value>scroll out</value>
+                    <label>scroll out</label>
+                    <label lang="de">ausfahren</label>
+                </option>
+                <option>
+                    <value>scroll to</value>
+                    <label>scroll to</label>
+                    <label lang="de">hinfahren</label>
+                </option>
+            </store>
         </element>
     </elements>
 </config>
