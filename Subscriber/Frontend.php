@@ -71,10 +71,13 @@ class Frontend implements SubscriberInterface
         if (empty($pluginInfos['consider']))
             return;
 
+        $assign = $view->getAssign();
+        if (empty($assign['sShippingcostsDifference']))
+            return;
+
         $consider = $pluginInfos['consider'];
         if (!empty($consider)) {
 
-            $assign = $view->getAssign();
             if (empty($assign['sBasket']))
                 return;
 
