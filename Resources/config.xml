@@ -155,18 +155,18 @@
                     <label lang="de">Kategorie</label>
                 </option>
                 <option>
-                    <value>manufacturer</value>
-                    <label>manufacturer</label>
+                    <value>supplier</value>
+                    <label>supplier</label>
                     <label lang="de">Hersteller</label>
                 </option>
                 <option>
-                    <value>categoryAndManufacturer</value>
-                    <label>category and manufacturer</label>
+                    <value>categoryAndSupplier</value>
+                    <label>category and supplier</label>
                     <label lang="de">Kategorie und Hersteller</label>
                 </option>
                 <option>
-                    <value>categoryOrManufacturer</value>
-                    <label>category or manufacturer</label>
+                    <value>categoryOrSupplier</value>
+                    <label>category or supplier</label>
                     <label lang="de">Kategorie oder Hersteller</label>
                 </option>
             </store>

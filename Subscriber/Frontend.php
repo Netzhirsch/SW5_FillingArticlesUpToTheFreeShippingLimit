@@ -1,11 +1,14 @@
 <?php
 namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit\Subscriber;
 
-use Doctrine\DBAL\Connection;
 use Enlight\Event\SubscriberInterface;
 use Enlight_Event_EventArgs;
+use Enlight_Exception;
 use Enlight_View_Default;
+use Shopware\Components\Model\ModelManager;
 use Shopware\Components\Plugin\ConfigReader;
+use Shopware\Models\Article\Article;
+use Shopware\Models\Article\Detail;
 
 class Frontend implements SubscriberInterface
 {
@@ -22,17 +25,22 @@ class Frontend implements SubscriberInterface
     private $pluginDirectory;
 
     /**
-     * @var Connection
+     * @var ModelManager
      */
-    private $connection;
+    private $modelManager;
 
 
-    public function __construct($pluginName,ConfigReader $config,$pluginDirectory,Connection $connection)
+    public function __construct(
+        $pluginName,
+        ConfigReader $config,
+        $pluginDirectory,
+        ModelManager $modelManager
+    )
     {
         $this->pluginName = $pluginName;
         $this->config = $config;
         $this->pluginDirectory = $pluginDirectory;
-        $this->connection = $connection;
+        $this->modelManager = $modelManager;
     }
 
     /**
@@ -47,6 +55,7 @@ class Frontend implements SubscriberInterface
 
     /**
      * @param Enlight_Event_EventArgs $args
+     * @throws Enlight_Exception
      */
     public function addTemplate(Enlight_Event_EventArgs $args)
     {
@@ -55,64 +64,125 @@ class Frontend implements SubscriberInterface
         $pluginInfos = $this->config->getByPluginName($this->pluginName);
         $consider = null;
         $fillingArticles = [];
-
+        $template = $view->Template();
+        $template_resource = $template->template_resource;
+        if ($template_resource == 'frontend/checkout/ajax_cart.tpl')
+            return;
         if (empty($pluginInfos['consider']))
             return;
 
         $consider = $pluginInfos['consider'];
+        if (!empty($consider)) {
 
-        switch ($consider) {
-            case 'category':
-                $assign = $view->getAssign();
-                $categoryIDs = [];
-                if (empty($assign['sBasket']))
-                    break;
+            $assign = $view->getAssign();
+            if (empty($assign['sBasket']))
+                return;
 
-                    $sBasket = $assign['sBasket'];
-                if (empty($sBasket['content']))
-                    break;
+            $sBasket = $assign['sBasket'];
+            if (empty($sBasket['content']))
+                return;
 
-                    $articlesFromBasket = $sBasket['content'];
-                    foreach ($articlesFromBasket as $articleFromBasket) {
-                        if (empty($articleFromBasket['articleID']))
-                            continue;
+            $supplierIDs = [];
+            $articleIDs = [];
+            $categoryIDs = [];
+            $articlesFromBasket = $sBasket['content'];
+            foreach ($articlesFromBasket as $articleFromBasket) {
+                if (empty($articleFromBasket['articleID']))
+                    continue;
 
-                        $articleModel = Shopware()->Modules()->Articles()->sGetArticleById($articleFromBasket['articleID']);
+                $articleModel
+                    = Shopware()->Modules()->Articles()->sGetArticleById($articleFromBasket['articleID']);
 
-                        $categoryID = $articleModel['categoryID'];
-                        if (in_array($categoryID,$categoryIDs))
-                            continue;
+                $articleIDs[] = $articleFromBasket['articleID'];
 
-                        $categoryIDs[] = $categoryID;
+                $categoryID = $articleModel['categoryID'];
+                if (!in_array($categoryID,$categoryIDs))
+                    $categoryIDs[] = $categoryID;
 
-                        $sql = '
-                            SELECT articleID
-                            FROM s_articles_categories
-                            WHERE categoryID = ?
-                        ';
-                        $articleIds = $this->connection->fetchAll($sql, [$categoryID]);
+                if (empty($articleFromBasket['additional_details']))
+                    continue;
 
-                        foreach ($articleIds as $articleId) {
-                            if ($articleFromBasket['articleID'] == $articleId['articleID'])
-                                continue;
+                $additionalDetails = $articleFromBasket['additional_details'];
+                if (empty($additionalDetails['supplierID']))
+                    continue;
+                $supplierID = $additionalDetails['supplierID'];
 
-                            $id = $articleId['articleID'];
-                            $sql = '
-                                SELECT ordernumber
-                                FROM s_articles_details
-                                WHERE articleID = ?
-                            ';
-                            $ordernumber = $this->connection->fetchColumn($sql, [$id]);
-                            $articleFromBasket = Shopware()->Modules()->Articles()->sGetArticleById($id,$ordernumber);
-                            $fillingArticles[$ordernumber]
-                                = array_merge($fillingArticles,$articleFromBasket);
-                        }
-                    }
-                break;
+                if (!in_array($supplierID,$supplierIDs))
+                    $supplierIDs[] = (string)$supplierID;
+            }
+            $fillingArticles = $this->getFillingArticles(
+                [
+                    'articleIDs' => $articleIDs,
+                    'categoryIDs' => $categoryIDs,
+                    'supplierIDs' => $supplierIDs,
+                ],
+                $consider
+            );
         }
         $view->assign(['fillingArticles' => $fillingArticles]);
 
         $view->addTemplateDir($this->pluginDirectory . '/Resources/views');
     }
 
+    private function getFillingArticles(array $ids,$consider) {
+
+        $fillingArticles = [];
+        $qb = $this->modelManager->createQueryBuilder();
+
+        $qb->select('article')
+            ->from(Article::class,'article')
+            ->where('article.id NOT IN (?1)')
+            ->setParameter(1,$ids['articleIDs']);
+
+        if (
+            $consider == 'categoryAndSupplier'
+            && !empty($ids['categoryIDs'])
+            && !empty($ids['supplierIDs'])
+            || $consider == 'categoryOrSupplier'
+            && !empty($ids['categoryIDs'])
+            && !empty($ids['supplierIDs'])
+        ) {
+            $qb->leftJoin('article.allCategories','allCategories')
+                ->leftJoin('article.supplier','supplier')
+                ->andWhere('allCategories.id IN (?3)');
+            if ($consider == 'categoryAndSupplier')
+                $qb->andWhere('supplier.id IN (?2)');
+            else
+                $qb->orWhere('supplier.id IN (?2)');
+            $qb->setParameter(3,$ids['categoryIDs'])
+                ->setParameter(2,$ids['supplierIDs']);
+
+        }
+        if ($consider == 'supplier' && !empty($ids['supplierIDs'])) {
+            $qb->leftJoin('article.supplier','supplier')
+                ->andWhere('supplier.id IN (?2)')
+                ->setParameter(2,$ids['supplierIDs']);
+        }
+
+        if ($consider == 'category' && !empty($ids['categoryIDs'])) {
+            $qb->leftJoin('article.allCategories','allCategories')
+                ->andWhere('allCategories.id IN (?3)')
+                ->setParameter(3,$ids['categoryIDs']);
+        }
+
+        $query =  $qb->getQuery();
+        /** @var Article[] $articles */
+        $articles = $query->getResult();
+
+        foreach ($articles as $article) {
+            /** @var Detail $details */
+            $detail = $article->getMainDetail();
+            $ordernumber = $detail->getNumber();
+            $articleFromSupplier
+                = Shopware()
+                ->Modules()
+                ->Articles()
+                ->sGetArticleById($article->getId(),$ordernumber);
+
+            if (!empty($ordernumber))
+                $fillingArticles[$ordernumber] = array_merge($fillingArticles,$articleFromSupplier);
+        }
+
+        return $fillingArticles;
+    }
 }

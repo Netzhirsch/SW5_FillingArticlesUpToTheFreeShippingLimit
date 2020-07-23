@@ -8,7 +8,8 @@
             <argument>%netzhirsch_filling_articles_up_to_the_free_shipping_limit.plugin_name%</argument>
             <argument id="shopware.plugin.cached_config_reader" type="service"/>
             <argument>%netzhirsch_filling_articles_up_to_the_free_shipping_limit.plugin_dir%</argument>
-            <argument id="dbal_connection" type="service"/>
+            <argument type="service" id="models"/>
+            <argument type="service" id="shopware_storefront.product_service"/>
         </service>
     </services>
 
