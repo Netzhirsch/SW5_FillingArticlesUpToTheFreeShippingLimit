@@ -9,6 +9,9 @@ use Shopware\Components\Model\ModelManager;
 use Shopware\Components\Plugin\ConfigReader;
 use Shopware\Models\Article\Article;
 use Shopware\Models\Article\Detail;
+use Shopware\Models\Category\Category;
+
+// SCFB = Shipping cost free boarder
 
 class Frontend implements SubscriberInterface
 {
@@ -61,131 +64,145 @@ class Frontend implements SubscriberInterface
     {
         /** @var Enlight_View_Default $view */
         $view = $args->get('subject')->View();
-        $pluginInfos = $this->config->getByPluginName($this->pluginName);
-        $consider = null;
-        $fillingArticles = [];
+
+        // default no filling articles in ajax basket
         $template = $view->Template();
         $template_resource = $template->template_resource;
         if ($template_resource == 'frontend/checkout/ajax_cart.tpl')
             return;
-        if (empty($pluginInfos['consider']))
-            return;
 
+        // no filling articles if basket price is ofer SCFB
         $assign = $view->getAssign();
         if (empty($assign['sShippingcostsDifference']))
             return;
 
-        $consider = $pluginInfos['consider'];
-        if (!empty($consider)) {
+        $pluginInfos = $this->config->getByPluginName($this->pluginName);
 
-            if (empty($assign['sBasket']))
-                return;
 
-            $sBasket = $assign['sBasket'];
-            if (empty($sBasket['content']))
-                return;
+        $fillingArticles
+                    = $this->getFillingArticles($assign['sBasket'],$pluginInfos,$assign['sShippingcostsDifference']);
 
-            $supplierIDs = [];
-            $articleIDs = [];
-            $categoryIDs = [];
-            $articlesFromBasket = $sBasket['content'];
-            foreach ($articlesFromBasket as $articleFromBasket) {
-                if (empty($articleFromBasket['articleID']))
-                    continue;
-
-                $articleModel
-                    = Shopware()->Modules()->Articles()->sGetArticleById($articleFromBasket['articleID']);
-
-                $articleIDs[] = $articleFromBasket['articleID'];
-
-                $categoryID = $articleModel['categoryID'];
-                if (!in_array($categoryID,$categoryIDs))
-                    $categoryIDs[] = $categoryID;
-
-                if (empty($articleFromBasket['additional_details']))
-                    continue;
-
-                $additionalDetails = $articleFromBasket['additional_details'];
-                if (empty($additionalDetails['supplierID']))
-                    continue;
-                $supplierID = $additionalDetails['supplierID'];
-
-                if (!in_array($supplierID,$supplierIDs))
-                    $supplierIDs[] = (string)$supplierID;
-            }
-            $fillingArticles = $this->getFillingArticles(
-                [
-                    'articleIDs' => $articleIDs,
-                    'categoryIDs' => $categoryIDs,
-                    'supplierIDs' => $supplierIDs,
-                ],
-                $consider
-            );
-        }
         $view->assign(['fillingArticles' => $fillingArticles]);
 
         $view->addTemplateDir($this->pluginDirectory . '/Resources/views');
     }
 
-    private function getFillingArticles(array $ids,$consider) {
+    private function getFillingArticles($sBasket,$pluginInfos,$sShippingcostsDifference) {
 
-        $fillingArticles = [];
+        $articleIds = $this->getArticleIdsFromBasket($sBasket);
+
+        // default query
         $qb = $this->modelManager->createQueryBuilder();
-
         $qb->select('article')
+            ->addSelect('detail')
+            ->addSelect('prices')
             ->from(Article::class,'article')
-            ->where('article.id NOT IN (?1)')
-            ->setParameter(1,$ids['articleIDs']);
+            ->where('article.id NOT IN (:articleIDs)')
+            ->setParameter('articleIDs',$articleIds);
 
-        if (
-            $consider == 'categoryAndSupplier'
-            && !empty($ids['categoryIDs'])
-            && !empty($ids['supplierIDs'])
-            || $consider == 'categoryOrSupplier'
-            && !empty($ids['categoryIDs'])
-            && !empty($ids['supplierIDs'])
-        ) {
-            $qb->leftJoin('article.allCategories','allCategories')
-                ->leftJoin('article.supplier','supplier')
-                ->andWhere('allCategories.id IN (?3)');
-            if ($consider == 'categoryAndSupplier')
-                $qb->andWhere('supplier.id IN (?2)');
-            else
-                $qb->orWhere('supplier.id IN (?2)');
-            $qb->setParameter(3,$ids['categoryIDs'])
-                ->setParameter(2,$ids['supplierIDs']);
-
-        }
-        if ($consider == 'supplier' && !empty($ids['supplierIDs'])) {
-            $qb->leftJoin('article.supplier','supplier')
-                ->andWhere('supplier.id IN (?2)')
-                ->setParameter(2,$ids['supplierIDs']);
+        // article combinations forbidden
+        if(!$pluginInfos['isCombineAllowed']) {
+            $qb->leftJoin('article.mainDetail','detail')
+                ->leftJoin('detail.prices','prices')
+                ->andWhere('prices.price >= :sShippingcostsDifference')
+                ->setParameter('sShippingcostsDifference',$sShippingcostsDifference);
         }
 
-        if ($consider == 'category' && !empty($ids['categoryIDs'])) {
-            $qb->leftJoin('article.allCategories','allCategories')
-                ->andWhere('allCategories.id IN (?3)')
-                ->setParameter(3,$ids['categoryIDs']);
+        // categories and suppliers
+        switch ($pluginInfos['consider']) {
+            case 'category':
+                $qb->leftJoin('article.allCategories', 'allCategories')
+                    ->andWhere('allCategories.id IN (:categoryIDs)')
+                    ->setParameter('categoryIDs', $this->getCategoryIdsFromArticleIds($articleIds));
+                break;
+            case 'supplier':
+                $qb->leftJoin('article.supplier', 'supplier')
+                    ->andWhere('supplier.id IN (:supplierIDs)')
+                    ->setParameter('supplierIDs', $this->getSupplierIdsFromBasket($sBasket));
+                break;
+            case 'categoryAndSupplier':
+                $qb->leftJoin('article.allCategories', 'allCategories')
+                    ->leftJoin('article.supplier', 'supplier')
+                    ->andWhere('allCategories.id IN (:categoryIDs) AND supplier.id IN (:supplierIDs)')
+                    ->setParameter('categoryIDs', $this->getCategoryIdsFromArticleIds($articleIds))
+                    ->setParameter('supplierIDs', $this->getSupplierIdsFromBasket($sBasket));
+                break;
+            case 'categoryOrSupplier':
+                $qb->leftJoin('article.allCategories', 'allCategories')
+                    ->leftJoin('article.supplier', 'supplier')
+                    ->andWhere('allCategories.id IN (:categoryIDs) OR supplier.id IN (:supplierIDs)')
+                    ->setParameter('categoryIDs', $this->getCategoryIdsFromArticleIds($articleIds))
+                    ->setParameter('supplierIDs', $this->getSupplierIdsFromBasket($sBasket));
+                break;
+            default:
+                break;
         }
-
-        $query =  $qb->getQuery();
         /** @var Article[] $articles */
-        $articles = $query->getResult();
+        $articles =$qb->getQuery()->getResult();
 
+        // get the missing article data
+        $fillingArticles = [];
         foreach ($articles as $article) {
+
             /** @var Detail $details */
             $detail = $article->getMainDetail();
             $ordernumber = $detail->getNumber();
-            $articleFromSupplier
+
+            if (empty($ordernumber))
+                continue;
+
+            $article
                 = Shopware()
                 ->Modules()
                 ->Articles()
                 ->sGetArticleById($article->getId(),$ordernumber);
 
-            if (!empty($ordernumber))
-                $fillingArticles[$ordernumber] = array_merge($fillingArticles,$articleFromSupplier);
+            $fillingArticles[$ordernumber] = array_merge($fillingArticles,$article);
         }
 
         return $fillingArticles;
+    }
+
+    private function getCategoryIdsFromArticleIds($articleIDs)
+    {
+        $qb = $this->modelManager->createQueryBuilder();
+        $qb->select('category.id')
+            ->from(Category::class,'category')
+            ->leftJoin('category.articles','article')
+            ->where('article.id IN (:articleIDs)')
+            ->setParameter('articleIDs',$articleIDs);
+        return $qb->getQuery()->getResult();
+    }
+
+    private function getArticleIdsFromBasket($basket) {
+        if (empty($basket['content']))
+            return [];
+
+        $articleIDs = [];
+        foreach ($basket['content'] as $articleFromBasket) {
+            if (empty($articleFromBasket['articleID']))
+                continue;
+
+            $articleIDs[$articleFromBasket['articleID']] = $articleFromBasket['articleID'];
+        }
+        return $articleIDs;
+    }
+
+    private function getSupplierIdsFromBasket($sBasket) {
+        if (empty($sBasket['content']))
+            return [];
+
+        $supplierIDs = [];
+        foreach ($sBasket['content'] as $articleFromBasket) {
+
+            if (empty($articleFromBasket['additional_details']))
+                continue;
+
+            $supplierID = $articleFromBasket['additional_details']['supplierID'];
+            if (empty($supplierID))
+                continue;
+            $supplierID[$supplierID] = $supplierID;
+        }
+        return $supplierIDs;
     }
 }

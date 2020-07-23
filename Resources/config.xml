@@ -78,7 +78,7 @@
             </options>
         </element>
         <element scope="shop" type="boolean">
-            <name>combinations</name>
+            <name>isCombineAllowed</name>
             <label lang="de">Kombinationen</label>
             <label>combinations</label>
             <description lang="de">Auch Füllartikel anzeigen, die alleine nicht die Versandkosten-Freigrenze erreichen.</description>
