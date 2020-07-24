@@ -106,11 +106,12 @@ class Frontend implements SubscriberInterface
             ->where('article.id NOT IN (:articleIDs)')
             ->setParameter('articleIDs',$articleIds);
 
-        // article combinations forbidden, minimum article price
+        // article combinations forbidden, minimum article price, maximum article price, maximum overhang
         if (
             !$pluginInfos['isCombineAllowed']
             || !empty($pluginInfos['minimumArticlePrice'])
             || !empty($pluginInfos['maximumArticlePrice'])
+            || !empty($pluginInfos['maximumOverhang'])
         ) {
             $qb->addSelect('prices')
                 ->addSelect('detail')
@@ -130,6 +131,7 @@ class Frontend implements SubscriberInterface
                 $qb->andWhere('prices.price >= :minimumArticlePrice')
                     ->setParameter('minimumArticlePrice',$minimumArticlePrice);
             }
+
             // maximum article price
             if (!empty($pluginInfos['maximumArticlePrice'])) {
                 $maximumArticlePrice = $pluginInfos['maximumArticlePrice'];
@@ -138,6 +140,15 @@ class Frontend implements SubscriberInterface
                 }
                 $qb->andWhere('prices.price <= :maximumArticlePrice')
                     ->setParameter('maximumArticlePrice',$maximumArticlePrice);
+            }
+
+            // maximun overhang
+            if (!empty($pluginInfos['maximumOverhang'])) {
+                $qb ->andWhere('(prices.price - '.$sShippingcostsDifference.') <= :over_hang')
+                    ->setParameter(
+                        'over_hang',$pluginInfos['maximumOverhang']
+                    )
+                ;
             }
         }
 

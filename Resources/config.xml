@@ -138,6 +138,16 @@
                 </option>
             </store>
         </element>
+        <element scope="shop" type="number">
+            <name>maximumOverhang</name>
+            <label lang="de">Maximaler Überhang über die VSKFG in Euro</label>
+            <label>maximum overhang over the VSKFG in Euro</label>
+            <description lang="de">Füllartikel Preis minus Rest zur Versandkosten-Freigrenze kleiner gleich Überhang</description>
+            <description>Filling article Price minus rest to the shipping cost exemption limit less than or equal to overhang</description>
+            <options>
+                <minValue>0</minValue>
+            </options>
+        </element>
         <element scope="shop" type="combo">
             <name>consider</name>
             <label lang="de">Für die Füllartikel berücksichtigen</label>
