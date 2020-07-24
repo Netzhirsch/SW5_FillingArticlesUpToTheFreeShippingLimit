@@ -82,9 +82,10 @@ class Frontend implements SubscriberInterface
         $fillingArticles
                     = $this->getFillingArticles($assign['sBasket'],$pluginInfos,$assign['sShippingcostsDifference']);
 
-        $view->assign(['fillingArticles' => $fillingArticles]);
-
-        $view->addTemplateDir($this->pluginDirectory . '/Resources/views');
+        if (!empty($fillingArticles)) {
+            $view->assign(['fillingArticles' => $fillingArticles]);
+            $view->addTemplateDir($this->pluginDirectory . '/Resources/views');
+        }
     }
 
     private function getFillingArticles($sBasket,$pluginInfos,$sShippingcostsDifference) {
@@ -94,15 +95,15 @@ class Frontend implements SubscriberInterface
         // default query
         $qb = $this->modelManager->createQueryBuilder();
         $qb->select('article')
-            ->addSelect('detail')
-            ->addSelect('prices')
             ->from(Article::class,'article')
             ->where('article.id NOT IN (:articleIDs)')
             ->setParameter('articleIDs',$articleIds);
 
         // article combinations forbidden
         if(!$pluginInfos['isCombineAllowed']) {
-            $qb->leftJoin('article.mainDetail','detail')
+            $qb->addSelect('prices')
+                ->addSelect('detail')
+                ->leftJoin('article.mainDetail','detail')
                 ->leftJoin('detail.prices','prices')
                 ->andWhere('prices.price >= :sShippingcostsDifference')
                 ->setParameter('sShippingcostsDifference',$sShippingcostsDifference);
@@ -139,7 +140,6 @@ class Frontend implements SubscriberInterface
         }
         /** @var Article[] $articles */
         $articles =$qb->getQuery()->getResult();
-
         // get the missing article data
         $fillingArticles = [];
         foreach ($articles as $article) {
