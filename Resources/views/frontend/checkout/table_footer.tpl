@@ -1,6 +1,6 @@
 {extends file='parent:frontend/checkout/table_footer.tpl'}
 {block name="frontend_checkout_footer_benefits"}
-    <div class="product-slider" data-product-slider="true">
+    <div id="fillingArticles" class="product-slider" data-product-slider="true">
 
         <!-- Product slider direction arrows -->
         <a class="product-slider--arrow arrow--next is--horizontal"></a>
