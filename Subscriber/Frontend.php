@@ -80,7 +80,7 @@ class Frontend implements SubscriberInterface
 
 
         $fillingArticles
-                    = $this->getFillingArticles($assign['sBasket'],$pluginInfos);
+                    = $this->getFillingArticles($assign['sBasket'],$pluginInfos,$assign['sShippingcostsDifference']);
 
         if (!empty($fillingArticles)) {
             $view->assign(['fillingArticles' => $fillingArticles]);
@@ -88,7 +88,7 @@ class Frontend implements SubscriberInterface
         }
     }
 
-    private function getFillingArticles($sBasket,$pluginInfos) {
+    private function getFillingArticles($sBasket,$pluginInfos,$sShippingcostsDifference) {
 
         $articleIds = $this->getArticleIdsFromBasket($sBasket);
 
@@ -98,6 +98,16 @@ class Frontend implements SubscriberInterface
             ->from(Article::class,'article')
             ->where('article.id NOT IN (:articleIDs)')
             ->setParameter('articleIDs',$articleIds);
+
+        // article combinations forbidden
+        if(!$pluginInfos['isCombineAllowed']) {
+            $qb->addSelect('prices')
+                ->addSelect('detail')
+                ->leftJoin('article.mainDetail','detail')
+                ->leftJoin('detail.prices','prices')
+                ->andWhere('prices.price >= :sShippingcostsDifference')
+                ->setParameter('sShippingcostsDifference',$sShippingcostsDifference);
+        }
 
         // categories and suppliers
         switch ($pluginInfos['consider']) {
