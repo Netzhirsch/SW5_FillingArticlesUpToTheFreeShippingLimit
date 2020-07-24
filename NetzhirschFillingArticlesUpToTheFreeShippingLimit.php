@@ -19,8 +19,8 @@ class NetzhirschFillingArticlesUpToTheFreeShippingLimit extends Plugin
         if ($context->keepUserData())
             return;
 
-        $context->scheduleClearCache([
-            UninstallContext::CACHE_TAG_CONFIG
-        ]);
+        if ($context->getPlugin()->getActive()) {
+            $context->scheduleClearCache(UninstallContext::CACHE_LIST_ALL);
+        }
     }
 }

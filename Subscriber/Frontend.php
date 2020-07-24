@@ -92,7 +92,7 @@ class Frontend implements SubscriberInterface
 
         $articleIds = $this->getArticleIdsFromBasket($sBasket);
 
-        // exlude articles
+        // exlude articles by plugin setting
         if (!empty($pluginInfos['excludedArticles'])) {
             foreach ($pluginInfos['excludedArticles'] as $excludedArticle) {
                 $articleIds[$excludedArticle] = $excludedArticle;
