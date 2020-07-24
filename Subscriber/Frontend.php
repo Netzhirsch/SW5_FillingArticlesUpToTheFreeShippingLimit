@@ -92,6 +92,13 @@ class Frontend implements SubscriberInterface
 
         $articleIds = $this->getArticleIdsFromBasket($sBasket);
 
+        // exlude articles
+        if (!empty($pluginInfos['excludedArticles'])) {
+            foreach ($pluginInfos['excludedArticles'] as $excludedArticle) {
+                $articleIds[$excludedArticle] = $excludedArticle;
+            }
+        }
+
         // default query
         $qb = $this->modelManager->createQueryBuilder();
         $qb->select('article')
