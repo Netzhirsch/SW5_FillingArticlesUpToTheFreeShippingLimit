@@ -80,7 +80,7 @@ class Frontend implements SubscriberInterface
 
 
         $fillingArticles
-                    = $this->getFillingArticles($assign['sBasket'],$pluginInfos,$assign['sShippingcostsDifference']);
+            = $this->getFillingArticles($assign['sBasket'],$pluginInfos,$assign['sShippingcostsDifference']);
 
         if (!empty($fillingArticles)) {
             $view->assign(['fillingArticles' => $fillingArticles]);
@@ -99,15 +99,43 @@ class Frontend implements SubscriberInterface
             ->where('article.id NOT IN (:articleIDs)')
             ->setParameter('articleIDs',$articleIds);
 
-        // article combinations forbidden
-        if(!$pluginInfos['isCombineAllowed']) {
+        // article combinations forbidden, minimum article price
+        if (
+            !$pluginInfos['isCombineAllowed']
+            || !empty($pluginInfos['minimumArticlePrice'])
+            || !empty($pluginInfos['maximumArticlePrice'])
+        ) {
             $qb->addSelect('prices')
                 ->addSelect('detail')
                 ->leftJoin('article.mainDetail','detail')
-                ->leftJoin('detail.prices','prices')
-                ->andWhere('prices.price >= :sShippingcostsDifference')
-                ->setParameter('sShippingcostsDifference',$sShippingcostsDifference);
+                ->leftJoin('detail.prices','prices');
+            // article combinations forbidden
+            if (!$pluginInfos['isCombineAllowed']) {
+                $qb->andWhere('prices.price >= :sShippingcostsDifference')
+                    ->setParameter('sShippingcostsDifference',$sShippingcostsDifference);
+            }
+            // minimum article price
+            if (!empty($pluginInfos['minimumArticlePrice'])) {
+                $minimumArticlePrice = $pluginInfos['minimumArticlePrice'];
+                if ($pluginInfos['minimumArticlePriceUnit'] == '%') {
+                    $minimumArticlePrice = $sShippingcostsDifference / 100 * $minimumArticlePrice;
+                }
+                $qb->andWhere('prices.price >= :minimumArticlePrice')
+                    ->setParameter('minimumArticlePrice',$minimumArticlePrice);
+            }
+            // maximum article price
+            if (!empty($pluginInfos['maximumArticlePrice'])) {
+                $maximumArticlePrice = $pluginInfos['maximumArticlePrice'];
+                if ($pluginInfos['maximumArticlePriceUnit'] == '%') {
+                    $maximumArticlePrice = $sShippingcostsDifference / 100 * $maximumArticlePrice;
+                }
+                $qb->andWhere('prices.price <= :maximumArticlePrice')
+                    ->setParameter('maximumArticlePrice',$maximumArticlePrice);
+            }
         }
+
+        // minimum article price
+
 
         // categories and suppliers
         switch ($pluginInfos['consider']) {
@@ -140,6 +168,8 @@ class Frontend implements SubscriberInterface
         }
         /** @var Article[] $articles */
         $articles =$qb->getQuery()->getResult();
+        //TODO*luhmann delete Debug
+        file_put_contents('/var/www/html/shopware/custom/plugins/NetzhirschFillingArticlesUpToTheFreeShippingLimit/tmp.sql',$qb->getQuery()->getSQL());
         // get the missing article data
         $fillingArticles = [];
         foreach ($articles as $article) {
