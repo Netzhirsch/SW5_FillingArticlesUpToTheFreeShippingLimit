@@ -78,6 +78,12 @@ class Frontend implements SubscriberInterface
 
         $pluginInfos = $this->config->getByPluginName($this->pluginName);
 
+        $notAboveBasket = false;
+        // show hint to the filling articles
+        if (!empty($pluginInfos['notAboveBasket']))
+            $notAboveBasket = true;
+
+        $view->assign(['notAboveBasket' => $notAboveBasket]);
 
         $fillingArticles
             = $this->getFillingArticles($assign['sBasket'],$pluginInfos,$assign['sShippingcostsDifference']);
