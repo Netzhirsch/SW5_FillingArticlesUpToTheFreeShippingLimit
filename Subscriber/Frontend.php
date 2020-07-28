@@ -141,111 +141,31 @@ class Frontend implements SubscriberInterface
         if (!empty($fillingArticles))
             return $fillingArticles;
 
+        $fillingArticles = $this->getFillingArticlesFromTopseller($pluginInfos['topSeller']);
+        if (!empty($fillingArticles))
+            return $fillingArticles;
+
         $articleIds = $this->getArticleIdsFromBasket($sBasket);
 
-        // exlude articles by plugin setting
+        //********* exlude articles by plugin setting *****************************************************************/
         if (!empty($pluginInfos['excludedArticles'])) {
             foreach ($pluginInfos['excludedArticles'] as $excludedArticle) {
                 $articleIds[$excludedArticle] = $excludedArticle;
             }
         }
 
-        // default query
-        $qb = $this->modelManager->createQueryBuilder();
-        $qb->select('article')
-            ->from(Article::class,'article')
-            ->where('article.id NOT IN (:articleIDs)')
-            ->setParameter('articleIDs',$articleIds);
-
-        // article combinations forbidden, minimum article price, maximum article price, maximum overhang
-        if (
-            !$pluginInfos['isCombineAllowed']
-            || !empty($pluginInfos['minimumArticlePrice'])
-            || !empty($pluginInfos['maximumArticlePrice'])
-            || !empty($pluginInfos['maximumOverhang'])
-        ) {
-            $qb->addSelect('prices')
-                ->addSelect('detail')
-                ->leftJoin('article.mainDetail','detail')
-                ->leftJoin('detail.prices','prices');
-            // article combinations forbidden
-            if (!$pluginInfos['isCombineAllowed']) {
-                $qb->andWhere('prices.price >= :sShippingcostsDifference')
-                    ->setParameter('sShippingcostsDifference',$sShippingcostsDifference);
-            }
-            // minimum article price
-            if (!empty($pluginInfos['minimumArticlePrice'])) {
-                $minimumArticlePrice = $pluginInfos['minimumArticlePrice'];
-                if ($pluginInfos['minimumArticlePriceUnit'] == '%') {
-                    $minimumArticlePrice = $sShippingcostsDifference / 100 * $minimumArticlePrice;
-                }
-                $qb->andWhere('prices.price >= :minimumArticlePrice')
-                    ->setParameter('minimumArticlePrice',$minimumArticlePrice);
-            }
-
-            // maximum article price
-            if (!empty($pluginInfos['maximumArticlePrice'])) {
-                $maximumArticlePrice = $pluginInfos['maximumArticlePrice'];
-                if ($pluginInfos['maximumArticlePriceUnit'] == '%') {
-                    $maximumArticlePrice = $sShippingcostsDifference / 100 * $maximumArticlePrice;
-                }
-                $qb->andWhere('prices.price <= :maximumArticlePrice')
-                    ->setParameter('maximumArticlePrice',$maximumArticlePrice);
-            }
-
-            // maximun overhang
-            if (!empty($pluginInfos['maximumOverhang'])) {
-                $qb ->andWhere('(prices.price - '.$sShippingcostsDifference.') <= :over_hang')
-                    ->setParameter(
-                        'over_hang',$pluginInfos['maximumOverhang']
-                    )
-                ;
-            }
-        }
-
-        // categories and suppliers
-        switch ($pluginInfos['consider']) {
-            case 'category':
-                $qb->leftJoin('article.allCategories', 'allCategories')
-                    ->andWhere('allCategories.id IN (:categoryIDs)')
-                    ->setParameter('categoryIDs', $this->getCategoryIdsFromArticleIds($articleIds));
-                break;
-            case 'supplier':
-                $qb->leftJoin('article.supplier', 'supplier')
-                    ->andWhere('supplier.id IN (:supplierIDs)')
-                    ->setParameter('supplierIDs', $this->getSupplierIdsFromBasket($sBasket));
-                break;
-            case 'categoryAndSupplier':
-                $qb->leftJoin('article.allCategories', 'allCategories')
-                    ->leftJoin('article.supplier', 'supplier')
-                    ->andWhere('allCategories.id IN (:categoryIDs) AND supplier.id IN (:supplierIDs)')
-                    ->setParameter('categoryIDs', $this->getCategoryIdsFromArticleIds($articleIds))
-                    ->setParameter('supplierIDs', $this->getSupplierIdsFromBasket($sBasket));
-                break;
-            case 'categoryOrSupplier':
-                $qb->leftJoin('article.allCategories', 'allCategories')
-                    ->leftJoin('article.supplier', 'supplier')
-                    ->andWhere('allCategories.id IN (:categoryIDs) OR supplier.id IN (:supplierIDs)')
-                    ->setParameter('categoryIDs', $this->getCategoryIdsFromArticleIds($articleIds))
-                    ->setParameter('supplierIDs', $this->getSupplierIdsFromBasket($sBasket));
-                break;
-            default:
-                break;
-        }
-
-        if (!empty($pluginInfos['similarArticles'])) {
-            $qb->leftJoin('article.similar', 'similar')
-                ->leftJoin('similar.related','related')
-                ->andWhere('similar.active = 1')
-                ->andWhere('similar.id IN (:articleIDs)')
-            ;
-        }
-
+        //********* get article collection ****************************************************************************/
+        $query = $this->getQuery($articleIds,$pluginInfos,$sShippingcostsDifference,$sBasket);
         /** @var Article[] $articles */
-        $articles =$qb->getQuery()->getResult();
+        $articles = $query->getResult();
+
         //TODO*luhmann delete Debug
-        file_put_contents('/var/www/html/shopware/custom/plugins/NetzhirschFillingArticlesUpToTheFreeShippingLimit/tmp.sql',$qb->getQuery()->getSQL());
-        // get the missing article data
+        file_put_contents(
+            '/var/www/html/shopware/custom/plugins/NetzhirschFillingArticlesUpToTheFreeShippingLimit/tmp.sql',
+            $query->getSQL()
+        );
+
+        //********* get the missing article data **********************************************************************/
         $fillingArticles = [];
         foreach ($articles as $article) {
 
@@ -388,5 +308,114 @@ class Frontend implements SubscriberInterface
                 ->sGetArticleById($article->getId(),$ordernumber)
         ];
 
+    }
+
+    private function getQuery(
+        $articleIds,
+        $pluginInfos,
+        $sShippingcostsDifference,
+        $sBasket
+    )
+    {
+        // default query
+        $qb = $this->modelManager->createQueryBuilder();
+        $qb->select('article')
+            ->from(Article::class,'article')
+            ->where('article.id NOT IN (:articleIDs)')
+            ->setParameter('articleIDs',$articleIds);
+
+        // article combinations forbidden, minimum article price, maximum article price, maximum overhang
+        if (
+            !$pluginInfos['isCombineAllowed']
+            || !empty($pluginInfos['minimumArticlePrice'])
+            || !empty($pluginInfos['maximumArticlePrice'])
+            || !empty($pluginInfos['maximumOverhang'])
+        ) {
+            $qb->addSelect('prices')
+                ->addSelect('detail')
+                ->leftJoin('article.mainDetail','detail')
+                ->leftJoin('detail.prices','prices');
+            // article combinations forbidden
+            if (!$pluginInfos['isCombineAllowed']) {
+                $qb->andWhere('prices.price >= :sShippingcostsDifference')
+                    ->setParameter('sShippingcostsDifference',$sShippingcostsDifference);
+            }
+            // minimum article price
+            if (!empty($pluginInfos['minimumArticlePrice'])) {
+                $minimumArticlePrice = $pluginInfos['minimumArticlePrice'];
+                if ($pluginInfos['minimumArticlePriceUnit'] == '%') {
+                    $minimumArticlePrice = $sShippingcostsDifference / 100 * $minimumArticlePrice;
+                }
+                $qb->andWhere('prices.price >= :minimumArticlePrice')
+                    ->setParameter('minimumArticlePrice',$minimumArticlePrice);
+            }
+
+            // maximum article price
+            if (!empty($pluginInfos['maximumArticlePrice'])) {
+                $maximumArticlePrice = $pluginInfos['maximumArticlePrice'];
+                if ($pluginInfos['maximumArticlePriceUnit'] == '%') {
+                    $maximumArticlePrice = $sShippingcostsDifference / 100 * $maximumArticlePrice;
+                }
+                $qb->andWhere('prices.price <= :maximumArticlePrice')
+                    ->setParameter('maximumArticlePrice',$maximumArticlePrice);
+            }
+
+            // maximun overhang
+            if (!empty($pluginInfos['maximumOverhang'])) {
+                $qb ->andWhere('(prices.price - '.$sShippingcostsDifference.') <= :over_hang')
+                    ->setParameter(
+                        'over_hang',$pluginInfos['maximumOverhang']
+                    )
+                ;
+            }
+        }
+
+        // categories and suppliers
+        switch ($pluginInfos['consider']) {
+            case 'category':
+                $qb->leftJoin('article.allCategories', 'allCategories')
+                    ->andWhere('allCategories.id IN (:categoryIDs)')
+                    ->setParameter('categoryIDs', $this->getCategoryIdsFromArticleIds($articleIds));
+                break;
+            case 'supplier':
+                $qb->leftJoin('article.supplier', 'supplier')
+                    ->andWhere('supplier.id IN (:supplierIDs)')
+                    ->setParameter('supplierIDs', $this->getSupplierIdsFromBasket($sBasket));
+                break;
+            case 'categoryAndSupplier':
+                $qb->leftJoin('article.allCategories', 'allCategories')
+                    ->leftJoin('article.supplier', 'supplier')
+                    ->andWhere('allCategories.id IN (:categoryIDs) AND supplier.id IN (:supplierIDs)')
+                    ->setParameter('categoryIDs', $this->getCategoryIdsFromArticleIds($articleIds))
+                    ->setParameter('supplierIDs', $this->getSupplierIdsFromBasket($sBasket));
+                break;
+            case 'categoryOrSupplier':
+                $qb->leftJoin('article.allCategories', 'allCategories')
+                    ->leftJoin('article.supplier', 'supplier')
+                    ->andWhere('allCategories.id IN (:categoryIDs) OR supplier.id IN (:supplierIDs)')
+                    ->setParameter('categoryIDs', $this->getCategoryIdsFromArticleIds($articleIds))
+                    ->setParameter('supplierIDs', $this->getSupplierIdsFromBasket($sBasket));
+                break;
+            default:
+                break;
+        }
+
+        if (!empty($pluginInfos['similarArticles'])) {
+            $qb->leftJoin('article.similar', 'similar')
+                ->leftJoin('similar.related','related')
+                ->andWhere('similar.active = 1')
+                ->andWhere('similar.id IN (:articleIDs)')
+            ;
+        }
+
+        return $qb->getQuery();
+    }
+
+    private function getFillingArticlesFromTopSeller($topSeller)
+    {
+        if (empty($topSeller))
+            return [];
+
+        return Shopware()->Modules()->Articles()->sGetArticleCharts();
     }
 }
