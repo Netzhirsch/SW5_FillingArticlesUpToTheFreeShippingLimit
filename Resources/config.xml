@@ -209,6 +209,8 @@
             <name>similarArticles</name>
             <label lang="de">Füllartikel aus ähnliche Artikel</label>
             <label>similar articles</label>
+            <description lang="de">Nur im Artikel verknüpfte ähnliche Artikel. Automatisch erzeugte ähnliche Artikel "Füllartikel berücksichtigen -> Kategorie" auswählen </description>
+            <description>Only similar articles linked in the article. Automatically generated similar articles "Consider filling article -> Select category.</description>
         </element>
         <element scope="shop" type="boolean">
             <name>crossSelling</name>

@@ -232,6 +232,15 @@ class Frontend implements SubscriberInterface
             default:
                 break;
         }
+
+        if (!empty($pluginInfos['similarArticles'])) {
+            $qb->leftJoin('article.similar', 'similar')
+                ->leftJoin('similar.related','related')
+                ->andWhere('similar.active = 1')
+                ->andWhere('similar.id IN (:articleIDs)')
+            ;
+        }
+
         /** @var Article[] $articles */
         $articles =$qb->getQuery()->getResult();
         //TODO*luhmann delete Debug
@@ -240,20 +249,12 @@ class Frontend implements SubscriberInterface
         $fillingArticles = [];
         foreach ($articles as $article) {
 
-            /** @var Detail $details */
-            $detail = $article->getMainDetail();
-            $ordernumber = $detail->getNumber();
+           $return = $this->getOrdernumberAndFrontendArticle($article);
 
-            if (empty($ordernumber))
+            if (empty($return))
                 continue;
 
-            $article
-                = Shopware()
-                ->Modules()
-                ->Articles()
-                ->sGetArticleById($article->getId(),$ordernumber);
-
-            $fillingArticles[$ordernumber] = array_merge($fillingArticles,$article);
+            $fillingArticles[$return['ordernumber']] = array_merge($fillingArticles,$return['articleForFrontend']);
         }
 
         return $fillingArticles;
@@ -368,5 +369,24 @@ class Frontend implements SubscriberInterface
             $supplierID[$supplierID] = $supplierID;
         }
         return $supplierIDs;
+    }
+
+    private function getOrdernumberAndFrontendArticle(Article $article)
+    {
+        /** @var Detail $details */
+        $detail = $article->getMainDetail();
+        $ordernumber = $detail->getNumber();
+
+        if (empty($ordernumber))
+            return null;
+
+        return [
+            'ordernumber' => $ordernumber,
+            'articleForFrontend' => Shopware()
+                ->Modules()
+                ->Articles()
+                ->sGetArticleById($article->getId(),$ordernumber)
+        ];
+
     }
 }
