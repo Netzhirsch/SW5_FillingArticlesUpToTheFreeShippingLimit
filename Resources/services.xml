@@ -9,7 +9,11 @@
             <argument id="shopware.plugin.cached_config_reader" type="service"/>
             <argument>%netzhirsch_filling_articles_up_to_the_free_shipping_limit.plugin_dir%</argument>
             <argument type="service" id="models"/>
-            <argument type="service" id="shopware_storefront.product_service"/>
+            <argument type="service" id="shopware_storefront.context_service"/>
+            <argument type="service" id="shopware_search.store_front_criteria_factory"/>
+            <argument type="service" id="shopware_product_stream.repository"/>
+            <argument type="service" id="shopware_search.variant_search"/>
+            <argument type="service" id="legacy_struct_converter"/>
         </service>
     </services>
 

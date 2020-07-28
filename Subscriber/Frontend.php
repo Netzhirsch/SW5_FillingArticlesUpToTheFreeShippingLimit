@@ -5,11 +5,18 @@ use Enlight\Event\SubscriberInterface;
 use Enlight_Event_EventArgs;
 use Enlight_Exception;
 use Enlight_View_Default;
+use Shopware\Bundle\SearchBundle\StoreFrontCriteriaFactory;
+use Shopware\Bundle\SearchBundle\VariantSearch;
+use Shopware\Bundle\StoreFrontBundle\Service\Core\ContextService;
+use Shopware\Bundle\StoreFrontBundle\Struct\ProductContextInterface;
+use Shopware\Components\Compatibility\LegacyStructConverter;
 use Shopware\Components\Model\ModelManager;
 use Shopware\Components\Plugin\ConfigReader;
 use Shopware\Models\Article\Article;
 use Shopware\Models\Article\Detail;
 use Shopware\Models\Category\Category;
+use Shopware\Models\ProductStream\ProductStream;
+use Shopware\Components\ProductStream\RepositoryInterface;
 
 // SCFB = Shipping cost free boarder
 
@@ -32,18 +39,52 @@ class Frontend implements SubscriberInterface
      */
     private $modelManager;
 
+    /**
+     * @var ContextService
+     */
+    private $contextService;
+
+    /**
+     * @var RepositoryInterface
+     */
+    private $streamRepository;
+
+    /**
+     * @var StoreFrontCriteriaFactory
+     */
+    private $criteriaFactory;
+
+    /**
+     * @var  VariantSearch $variantSearch
+     */
+    private $variantSearch;
+
+    /**
+     * @var LegacyStructConverter $legacyStructConverter
+     */
+    private $legacyStructConverter;
 
     public function __construct(
         $pluginName,
         ConfigReader $config,
         $pluginDirectory,
-        ModelManager $modelManager
+        ModelManager $modelManager,
+        ContextService $contextService,
+        StoreFrontCriteriaFactory $criteriaFactory,
+        RepositoryInterface $streamRepository,
+        VariantSearch $variantSearch,
+        LegacyStructConverter $legacyStructConverter
     )
     {
         $this->pluginName = $pluginName;
         $this->config = $config;
         $this->pluginDirectory = $pluginDirectory;
         $this->modelManager = $modelManager;
+        $this->contextService = $contextService;
+        $this->criteriaFactory = $criteriaFactory;
+        $this->streamRepository = $streamRepository;
+        $this->variantSearch = $variantSearch;
+        $this->legacyStructConverter = $legacyStructConverter;
     }
 
     /**
@@ -95,6 +136,10 @@ class Frontend implements SubscriberInterface
     }
 
     private function getFillingArticles($sBasket,$pluginInfos,$sShippingcostsDifference) {
+
+        $fillingArticles = $this->getFillingArticlesFromProductStreams($pluginInfos['productStream']);
+        if (!empty($fillingArticles))
+            return $fillingArticles;
 
         $articleIds = $this->getArticleIdsFromBasket($sBasket);
 
@@ -158,9 +203,6 @@ class Frontend implements SubscriberInterface
             }
         }
 
-        // minimum article price
-
-
         // categories and suppliers
         switch ($pluginInfos['consider']) {
             case 'category':
@@ -212,6 +254,74 @@ class Frontend implements SubscriberInterface
                 ->sGetArticleById($article->getId(),$ordernumber);
 
             $fillingArticles[$ordernumber] = array_merge($fillingArticles,$article);
+        }
+
+        return $fillingArticles;
+    }
+
+    /**
+     * Returns the fill articles according to the product streams.
+     * @param string $productStreamsNames
+     * @return array $fillingArticles
+     */
+    private function getFillingArticlesFromProductStreams($productStreamsNames)
+    {
+        $fillingArticles = [];
+
+        if (!empty($productStreamsNames)) {
+
+            //********* get default criteria **************************************************************************/
+            $contextService = $this->contextService;
+            /** @var ProductContextInterface $context */
+            $context = $contextService->getShopContext();
+
+            $shop = $context->getShop();
+            if (empty($shop))
+                return $fillingArticles;
+
+            $category = $shop->getCategory();
+            if (empty($category))
+                return $fillingArticles;
+
+            $categoryId = $category->getId();
+            $criteria = $this->criteriaFactory->createBaseCriteria([$categoryId], $context);
+            $criteria->offset(0)
+                ->limit(10);
+
+            //********* get product stream model by name from plugin config *******************************************/
+            $qb = $this->modelManager->createQueryBuilder();
+            /** @var ProductStream[] $productSteams */
+            $productSteams = $qb
+                ->select('productStream')
+                ->from(ProductStream::class,'productStream')
+                ->where('productStream.name IN (:productStreamsIds)')
+                ->setParameter('productStreamsIds',$productStreamsNames)
+                ->getQuery()
+                ->getResult();
+
+            //********* get filling articles from product streams *****************************************************/
+            if (!empty($productSteams)) {
+
+                $fillingArticles = [];
+                foreach ($productSteams as $productSteam) {
+
+                    $this->streamRepository->prepareCriteria($criteria, $productSteam->getId());
+                    $variantSearch = $this->variantSearch;
+                    $searchQuery = $variantSearch->search($criteria,$context);
+                    if (empty($searchQuery))
+                        continue;
+
+                    $products = $searchQuery->getProducts();
+                    if (empty($products))
+                        continue;
+
+                    $articleFromProductStream = $this->legacyStructConverter->convertListProductStructList($products);
+                    if (empty($articleFromProductStream))
+                        continue;
+
+                    $fillingArticles = array_merge($fillingArticles,$articleFromProductStream);
+                }
+            }
         }
 
         return $fillingArticles;
