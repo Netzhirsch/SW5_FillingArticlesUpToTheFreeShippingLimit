@@ -1,0 +1,1 @@
+{extends file='parent:frontend/checkout/ajax_cart.tpl'}
