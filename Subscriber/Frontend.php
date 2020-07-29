@@ -6,8 +6,14 @@ use Enlight\Event\SubscriberInterface;
 use Enlight_Event_EventArgs;
 use Enlight_Exception;
 use Enlight_View_Default;
+use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Sorting\VoteSorting;
+use Shopware\Bundle\SearchBundle\Sorting\PriceSorting;
+use Shopware\Bundle\SearchBundle\Sorting\RandomSorting;
+use Shopware\Bundle\SearchBundle\SortingInterface;
 use Shopware\Bundle\SearchBundle\StoreFrontCriteriaFactory;
 use Shopware\Bundle\SearchBundle\VariantSearch;
+use Shopware\Bundle\SearchBundleDBAL\QueryBuilderFactory;
+use Shopware\Bundle\SearchBundleDBAL\SortingHandler\PriceSortingHandler;
 use Shopware\Bundle\StoreFrontBundle\Service\Core\ContextService;
 use Shopware\Bundle\StoreFrontBundle\Struct\ProductContextInterface;
 use Shopware\Components\Compatibility\LegacyStructConverter;
@@ -66,6 +72,13 @@ class Frontend implements SubscriberInterface
      */
     private $legacyStructConverter;
 
+    /**
+     * @var PriceSortingHandler $priceSortingHandler
+     */
+    private $priceSortingHandler;
+
+    private $queryBuilder;
+
     public function __construct(
         $pluginName,
         ConfigReader $config,
@@ -75,7 +88,9 @@ class Frontend implements SubscriberInterface
         StoreFrontCriteriaFactory $criteriaFactory,
         RepositoryInterface $streamRepository,
         VariantSearch $variantSearch,
-        LegacyStructConverter $legacyStructConverter
+        LegacyStructConverter $legacyStructConverter,
+        PriceSortingHandler $priceSortingHandler,
+        QueryBuilderFactory $queryBuilder
     )
     {
         $this->pluginName = $pluginName;
@@ -87,6 +102,8 @@ class Frontend implements SubscriberInterface
         $this->streamRepository = $streamRepository;
         $this->variantSearch = $variantSearch;
         $this->legacyStructConverter = $legacyStructConverter;
+        $this->priceSortingHandler = $priceSortingHandler;
+        $this->queryBuilder = $queryBuilder;
     }
 
     /**
@@ -155,7 +172,7 @@ class Frontend implements SubscriberInterface
     private function getFillingArticles($sBasket,$pluginInfos,$sShippingcostsDifference) {
 
         $fillingArticles
-            = $this->getFillingArticlesFromProductStreams($pluginInfos['productStream'],$pluginInfos['maxArticle']);
+            = $this->getFillingArticlesFromProductStreams($pluginInfos);
         if (!empty($fillingArticles))
             return $fillingArticles;
 
@@ -201,15 +218,14 @@ class Frontend implements SubscriberInterface
 
     /**
      * Returns the fill articles according to the product streams.
-     * @param string $productStreamsNames
-     * @param $maxArticle
+     * @param array $pluginInfos
      * @return array $fillingArticles
      */
-    private function getFillingArticlesFromProductStreams($productStreamsNames,$maxArticle)
+    private function getFillingArticlesFromProductStreams($pluginInfos)
     {
         $fillingArticles = [];
 
-        if (!empty($productStreamsNames)) {
+        if (!empty($pluginInfos['productStream'])) {
 
             //********* get default criteria **************************************************************************/
             $contextService = $this->contextService;
@@ -227,16 +243,32 @@ class Frontend implements SubscriberInterface
             $categoryId = $category->getId();
             $criteria = $this->criteriaFactory->createBaseCriteria([$categoryId], $context);
             $criteria->offset(0)
-                ->limit($maxArticle);
+                ->limit($pluginInfos['maxArticle']);
 
-            //********* get product stream model by name from plugin config *******************************************/
             $qb = $this->modelManager->createQueryBuilder();
+            if (!empty($pluginInfos['sorting'])) {
+                switch($pluginInfos['sorting']) {
+                    case 'price ascending':
+                        $criteria->addSorting(new PriceSorting(SortingInterface::SORT_ASC));
+                        break;
+                    case 'price descending':
+                        $criteria->addSorting(new PriceSorting(SortingInterface::SORT_DESC));
+                        break;
+                    case 'votes ascending':
+                        $criteria->addSorting(new VoteSorting(SortingInterface::SORT_DESC));
+                        break;
+                    case 'randomly':
+                        $criteria->addSorting(new RandomSorting(SortingInterface::SORT_DESC));
+                        break;
+                }
+            }
+            //********* get product stream model by name from plugin config *******************************************/
             /** @var ProductStream[] $productSteams */
             $productSteams = $qb
                 ->select('productStream')
                 ->from(ProductStream::class,'productStream')
                 ->where('productStream.name IN (:productStreamsIds)')
-                ->setParameter('productStreamsIds',$productStreamsNames)
+                ->setParameter('productStreamsIds',$pluginInfos['productStream'])
                 ->getQuery()
                 ->getResult();
 
@@ -423,7 +455,8 @@ class Frontend implements SubscriberInterface
                     break;
                 case 'votes ascending':
                     $qb->leftJoin('article.votes','votes')
-                        ->addOrderBy('votes.points','DESC');
+                        ->addOrderBy('SUM(votes.points)/COUNT(votes.articleID)', 'DESC')
+                        ->addOrderBy('COUNT(votes.articleID)', 'DESC');
                     break;
                 case 'stock ascending':
                     $qb->orderBy('detail.inStock','DESC');

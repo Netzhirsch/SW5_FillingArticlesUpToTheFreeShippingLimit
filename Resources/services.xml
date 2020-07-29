@@ -14,6 +14,11 @@
             <argument type="service" id="shopware_product_stream.repository"/>
             <argument type="service" id="shopware_search.variant_search"/>
             <argument type="service" id="legacy_struct_converter"/>
+            <argument type="service" id="shopware_searchdbal.price_sorting_handler_sorting_handler_dbal"/>
+            <argument type="service" id="shopware_searchdbal.dbal_query_builder_factory"/>
+        </service>
+        <service id="shopware_searchdbal.shopware_searchdbal.vote_sorting_handler_dbal" class="NetzhirschFillingArticlesUpToTheFreeShippingLimit\Sorting\VoteSortingHandler">
+            <tag name="sorting_handler_dbal"/>
         </service>
     </services>
 
