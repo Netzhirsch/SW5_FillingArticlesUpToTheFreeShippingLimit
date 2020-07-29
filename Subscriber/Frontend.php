@@ -159,7 +159,7 @@ class Frontend implements SubscriberInterface
         if (!empty($fillingArticles))
             return $fillingArticles;
 
-        $fillingArticles = $this->getFillingArticlesFromTopseller($pluginInfos['topSeller']);
+        $fillingArticles = $this->getFillingArticlesFromTopseller($pluginInfos['topSeller'],$pluginInfos['maxArticle']);
         if (!empty($fillingArticles))
             return $fillingArticles;
 
@@ -268,12 +268,16 @@ class Frontend implements SubscriberInterface
         return $fillingArticles;
     }
 
-    private function getFillingArticlesFromTopSeller($topSeller)
+    private function getFillingArticlesFromTopSeller($isTopSeller,$maxArticle)
     {
-        if (empty($topSeller))
+        if (empty($isTopSeller))
             return [];
 
-        return Shopware()->Modules()->Articles()->sGetArticleCharts();
+        $topSeller = Shopware()->Modules()->Articles()->sGetArticleCharts();
+        if (empty($maxArticle))
+            return $topSeller;
+
+        return array_slice($topSeller,0,$maxArticle);
     }
 
     private function getArticleIdsFromBasket($basket) {
@@ -428,6 +432,10 @@ class Frontend implements SubscriberInterface
                     $qb->orderBy('detail.inStock');
                     break;
             }
+        }
+
+        if (!empty($pluginInfos['maxArticle'])) {
+            $qb->setMaxResults($pluginInfos['maxArticle']);
         }
 
         return $qb->getQuery();
