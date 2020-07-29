@@ -320,7 +320,9 @@ class Frontend implements SubscriberInterface
         // default query
         $qb = $this->modelManager->createQueryBuilder();
         $qb->select('article')
+            ->addSelect('detail')
             ->from(Article::class,'article')
+            ->leftJoin('article.mainDetail','detail')
             ->where('article.id NOT IN (:articleIDs)')
             ->setParameter('articleIDs',$articleIds);
 
@@ -330,10 +332,10 @@ class Frontend implements SubscriberInterface
             || !empty($pluginInfos['minimumArticlePrice'])
             || !empty($pluginInfos['maximumArticlePrice'])
             || !empty($pluginInfos['maximumOverhang'])
+            || $pluginInfos['sorting'] == 'price ascending'
+            || $pluginInfos['sorting'] == 'price descending'
         ) {
             $qb->addSelect('prices')
-                ->addSelect('detail')
-                ->leftJoin('article.mainDetail','detail')
                 ->leftJoin('detail.prices','prices');
             // article combinations forbidden
             if (!$pluginInfos['isCombineAllowed']) {
@@ -406,6 +408,27 @@ class Frontend implements SubscriberInterface
                 ->andWhere('similar.active = 1')
                 ->andWhere('similar.id IN (:articleIDs)')
             ;
+        }
+
+        if (!empty($pluginInfos['sorting'])) {
+            switch ($pluginInfos['sorting']) {
+                case 'price ascending':
+                    $qb->orderBy('prices.price');
+                    break;
+                case 'price descending':
+                    $qb->orderBy('prices.price','DESC');
+                    break;
+                case 'votes ascending':
+                    $qb->leftJoin('article.votes','votes')
+                        ->addOrderBy('votes.points','DESC');
+                    break;
+                case 'stock ascending':
+                    $qb->orderBy('detail.inStock','DESC');
+                    break;
+                case 'stock descending':
+                    $qb->orderBy('detail.inStock');
+                    break;
+            }
         }
 
         return $qb->getQuery();

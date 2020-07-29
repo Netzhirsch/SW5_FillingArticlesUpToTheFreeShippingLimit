@@ -244,8 +244,8 @@
                     <label lang="de">Preis absteigend</label>
                 </option>
                 <option>
-                    <value>votes descending</value>
-                    <label>votes descending</label>
+                    <value>votes ascending</value>
+                    <label>votes ascending</label>
                     <label lang="de">Bewertungen aufsteigend</label>
                 </option>
                 <option>
