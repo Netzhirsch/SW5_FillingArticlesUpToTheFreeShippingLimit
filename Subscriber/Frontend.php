@@ -1,6 +1,7 @@
 <?php
 namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit\Subscriber;
 
+use Doctrine\Common\Collections\ArrayCollection;
 use Enlight\Event\SubscriberInterface;
 use Enlight_Event_EventArgs;
 use Enlight_Exception;
@@ -12,6 +13,7 @@ use Shopware\Bundle\StoreFrontBundle\Struct\ProductContextInterface;
 use Shopware\Components\Compatibility\LegacyStructConverter;
 use Shopware\Components\Model\ModelManager;
 use Shopware\Components\Plugin\ConfigReader;
+use Shopware\Components\Theme\LessDefinition;
 use Shopware\Models\Article\Article;
 use Shopware\Models\Article\Detail;
 use Shopware\Models\Category\Category;
@@ -93,8 +95,28 @@ class Frontend implements SubscriberInterface
     public static function getSubscribedEvents()
     {
         return [
+            'Theme_Compiler_Collect_Plugin_Less' => 'addLessFile',
+            'Theme_Compiler_Collect_Plugin_Javascript' => 'addJsFile',
             'Enlight_Controller_Action_PostDispatchSecure_Frontend_Checkout' => 'addTemplate',
         ];
+    }
+
+    public function addLessFile()
+    {
+        $less = new LessDefinition(array(),
+            array(
+                $this->pluginDirectory . '/Resources/views/frontend/_public/src/less/netzhirschFillingArticlesUpToTheFreeShippingLimit.less'
+            ), __DIR__);
+
+        return new ArrayCollection(array(
+            $less
+        ));
+    }
+
+    public function addJsFile()
+    {
+        $jsFiles = array($this->pluginDirectory . '/Resources/views/frontend/_public/src/js/netzhirschFillingArticlesUpToTheFreeShippingLimit.js');
+        return new ArrayCollection($jsFiles);
     }
 
     /**
