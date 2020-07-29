@@ -152,6 +152,7 @@ class Frontend implements SubscriberInterface
             = $this->getFillingArticles($assign['sBasket'],$pluginInfos,$assign['sShippingcostsDifference']);
 
         if (!empty($fillingArticles)) {
+            $view->assign(['displayVariants' => $pluginInfos['displayVariants']]);
             $view->assign(['fillingArticles' => $fillingArticles]);
             $view->addTemplateDir($this->pluginDirectory . '/Resources/views');
         }
@@ -201,6 +202,7 @@ class Frontend implements SubscriberInterface
 
         return $fillingArticles;
     }
+
 
     /**
      * Returns the fill articles according to the product streams.
@@ -270,15 +272,12 @@ class Frontend implements SubscriberInterface
         return $fillingArticles;
     }
 
-    private function getCategoryIdsFromArticleIds($articleIDs)
+    private function getFillingArticlesFromTopSeller($topSeller)
     {
-        $qb = $this->modelManager->createQueryBuilder();
-        $qb->select('category.id')
-            ->from(Category::class,'category')
-            ->leftJoin('category.articles','article')
-            ->where('article.id IN (:articleIDs)')
-            ->setParameter('articleIDs',$articleIDs);
-        return $qb->getQuery()->getResult();
+        if (empty($topSeller))
+            return [];
+
+        return Shopware()->Modules()->Articles()->sGetArticleCharts();
     }
 
     private function getArticleIdsFromBasket($basket) {
@@ -293,24 +292,6 @@ class Frontend implements SubscriberInterface
             $articleIDs[$articleFromBasket['articleID']] = $articleFromBasket['articleID'];
         }
         return $articleIDs;
-    }
-
-    private function getSupplierIdsFromBasket($sBasket) {
-        if (empty($sBasket['content']))
-            return [];
-
-        $supplierIDs = [];
-        foreach ($sBasket['content'] as $articleFromBasket) {
-
-            if (empty($articleFromBasket['additional_details']))
-                continue;
-
-            $supplierID = $articleFromBasket['additional_details']['supplierID'];
-            if (empty($supplierID))
-                continue;
-            $supplierID[$supplierID] = $supplierID;
-        }
-        return $supplierIDs;
     }
 
     private function getOrdernumberAndFrontendArticle(Article $article)
@@ -456,11 +437,33 @@ class Frontend implements SubscriberInterface
         return $qb->getQuery();
     }
 
-    private function getFillingArticlesFromTopSeller($topSeller)
+    private function getCategoryIdsFromArticleIds($articleIDs)
     {
-        if (empty($topSeller))
+        $qb = $this->modelManager->createQueryBuilder();
+        $qb->select('category.id')
+            ->from(Category::class,'category')
+            ->leftJoin('category.articles','article')
+            ->where('article.id IN (:articleIDs)')
+            ->setParameter('articleIDs',$articleIDs);
+        return $qb->getQuery()->getResult();
+    }
+
+    private function getSupplierIdsFromBasket($sBasket) {
+        if (empty($sBasket['content']))
             return [];
 
-        return Shopware()->Modules()->Articles()->sGetArticleCharts();
+        $supplierIDs = [];
+        foreach ($sBasket['content'] as $articleFromBasket) {
+
+            if (empty($articleFromBasket['additional_details']))
+                continue;
+
+            $supplierID = $articleFromBasket['additional_details']['supplierID'];
+            if (empty($supplierID))
+                continue;
+            $supplierID[$supplierID] = $supplierID;
+        }
+        return $supplierIDs;
     }
+
 }
