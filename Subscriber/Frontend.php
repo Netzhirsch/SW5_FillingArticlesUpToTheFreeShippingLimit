@@ -154,7 +154,8 @@ class Frontend implements SubscriberInterface
 
     private function getFillingArticles($sBasket,$pluginInfos,$sShippingcostsDifference) {
 
-        $fillingArticles = $this->getFillingArticlesFromProductStreams($pluginInfos['productStream']);
+        $fillingArticles
+            = $this->getFillingArticlesFromProductStreams($pluginInfos['productStream'],$pluginInfos['maxArticle']);
         if (!empty($fillingArticles))
             return $fillingArticles;
 
@@ -201,9 +202,10 @@ class Frontend implements SubscriberInterface
     /**
      * Returns the fill articles according to the product streams.
      * @param string $productStreamsNames
+     * @param $maxArticle
      * @return array $fillingArticles
      */
-    private function getFillingArticlesFromProductStreams($productStreamsNames)
+    private function getFillingArticlesFromProductStreams($productStreamsNames,$maxArticle)
     {
         $fillingArticles = [];
 
@@ -225,7 +227,7 @@ class Frontend implements SubscriberInterface
             $categoryId = $category->getId();
             $criteria = $this->criteriaFactory->createBaseCriteria([$categoryId], $context);
             $criteria->offset(0)
-                ->limit(10);
+                ->limit($maxArticle);
 
             //********* get product stream model by name from plugin config *******************************************/
             $qb = $this->modelManager->createQueryBuilder();
