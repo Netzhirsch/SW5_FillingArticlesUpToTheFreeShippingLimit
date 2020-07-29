@@ -128,12 +128,6 @@ class Frontend implements SubscriberInterface
         /** @var Enlight_View_Default $view */
         $view = $args->get('subject')->View();
 
-        // default no filling articles in ajax basket
-        $template = $view->Template();
-        $template_resource = $template->template_resource;
-        if ($template_resource == 'frontend/checkout/ajax_cart.tpl')
-            return;
-
         // no filling articles if basket price is ofer SCFB
         $assign = $view->getAssign();
         if (empty($assign['sShippingcostsDifference']))
