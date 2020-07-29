@@ -1,7 +1,9 @@
 $(document).ready(function () {
     $('a[href="#fillingArticles"]').on("click", function (event) {
         event.preventDefault();
+
         let fillingArticlesContainer = $('#fillingArticles');
+        // display variante popup
         if (fillingArticlesContainer.hasClass('netzhirsch_filling_articles_up_to_the_free_shipping_limit--hidden')) {
             let content = fillingArticlesContainer.html();
             $.modal.open(content, {
@@ -11,6 +13,8 @@ $(document).ready(function () {
                 width: 700
             });
         } else {
+
+            // smoothe scroll
             let ziel = $(this).attr("href");
 
             $('html,body').animate({
