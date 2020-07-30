@@ -20,8 +20,20 @@
         <service id="shopware_searchdbal.shopware_searchdbal.vote_sorting_handler_dbal" class="NetzhirschFillingArticlesUpToTheFreeShippingLimit\Sorting\VoteSortingHandler">
             <tag name="sorting_handler_dbal"/>
         </service>
-        <service id="shopware_searchdbal.shopware_searchdbal.not_article_ids_handler_dbal" class="NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundleDBAL\Condition\NotInArticleIdsHandler">
+        <service id="shopware_searchdbal.shopware_searchdbal.not_article_ids_condition_handler_dbal" class="NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundleDBAL\Condition\NotInArticleIdsConditionHandler">
             <tag name="condition_handler_dbal"/>
+        </service>
+        <service id="shopware_searchdbal.shopware_searchdbal.combine_condition_handler_dbal" class="NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundleDBAL\Condition\CombineConditionHandler">
+            <tag name="condition_handler_dbal"/>
+            <argument type="service" id="shopware_searchdbal.listing_price_switcher"/>
+        </service>
+        <service id="shopware_searchdbal.shopware_searchdbal.max_overhang_condition_handler_dbal" class="NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundleDBAL\Condition\MaxOverhangConditionHandler">
+            <tag name="condition_handler_dbal"/>
+            <argument type="service" id="shopware_searchdbal.listing_price_switcher"/>
+        </service>
+        <service id="shopware_searchdbal.shopware_searchdbal.separately_condition_handler_dbal" class="NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundleDBAL\Condition\SeparatelyConditionHandler">
+            <tag name="condition_handler_dbal"/>
+            <argument type="service" id="service_container"/>
         </service>
     </services>
 

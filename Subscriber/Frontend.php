@@ -6,8 +6,17 @@ use Enlight\Event\SubscriberInterface;
 use Enlight_Event_EventArgs;
 use Enlight_Exception;
 use Enlight_View_Default;
-use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\NotInArticleIds;
+use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\CombineContion;
+use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\MaxOverhangCondition;
+use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\NotInArticleIdsCondition;
+use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\SeparatelyCondition;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Sorting\VoteSorting;
+use Shopware\Bundle\SearchBundle\Condition\CategoryCondition;
+use Shopware\Bundle\SearchBundle\Condition\CombinedCondition;
+use Shopware\Bundle\SearchBundle\Condition\ManufacturerCondition;
+use Shopware\Bundle\SearchBundle\Condition\PriceCondition;
+use Shopware\Bundle\SearchBundle\Condition\SimilarProductCondition;
+use Shopware\Bundle\SearchBundle\Sorting\PopularitySorting;
 use Shopware\Bundle\SearchBundle\Sorting\PriceSorting;
 use Shopware\Bundle\SearchBundle\Sorting\ProductStockSorting;
 use Shopware\Bundle\SearchBundle\Sorting\RandomSorting;
@@ -173,28 +182,37 @@ class Frontend implements SubscriberInterface
 
     private function getFillingArticles($sBasket,$pluginInfos,$sShippingcostsDifference) {
 
-        $fillingArticles = $this->getFillingArticlesFromTopseller($pluginInfos['topSeller'],$pluginInfos['maxArticle']);
-        if (!empty($fillingArticles))
-            return $fillingArticles;
-
-        $articleIds = $this->getArticleIdsFromBasket($sBasket);
-
-        $fillingArticles
-            = $this->getFillingArticlesFromProductStreams($pluginInfos,$articleIds);
-        if (!empty($fillingArticles))
-            return $fillingArticles;
-
-
-
+        $articleIdsToExclude = $this->getArticleIdsFromBasket($sBasket);
         //********* exlude articles by plugin setting *****************************************************************/
         if (!empty($pluginInfos['excludedArticles'])) {
             foreach ($pluginInfos['excludedArticles'] as $excludedArticle) {
-                $articleIds[$excludedArticle] = $excludedArticle;
+                $articleIdsToExclude[$excludedArticle] = $excludedArticle;
             }
         }
 
+        $fillingArticles = $this->getFillingArticlesFromTopseller(
+            $pluginInfos,
+            $articleIdsToExclude,
+            $sShippingcostsDifference,
+            $sBasket
+        );
+
+        if (!empty($fillingArticles))
+            return $fillingArticles;
+
+        $fillingArticles
+            = $this->getFillingArticlesFromProductStreams(
+                $pluginInfos,
+                $articleIdsToExclude,
+                $sShippingcostsDifference,
+                $sBasket
+        );
+
+        if (!empty($fillingArticles))
+            return $fillingArticles;
+
         //********* get article collection ****************************************************************************/
-        $query = $this->getQuery($articleIds,$pluginInfos,$sShippingcostsDifference,$sBasket);
+        $query = $this->getQuery($articleIdsToExclude,$pluginInfos,$sShippingcostsDifference,$sBasket);
         /** @var Article[] $articles */
         $articles = $query->getResult();
 
@@ -223,58 +241,19 @@ class Frontend implements SubscriberInterface
     /**
      * Returns the fill articles according to the product streams.
      * @param array $pluginInfos
+     * @param $articlesInBasketIds
+     * @param $sShippingcostsDifference
+     * @param $sBasket
      * @return array $fillingArticles
      */
-    private function getFillingArticlesFromProductStreams($pluginInfos,$articlesInBasketIds)
+    private function getFillingArticlesFromProductStreams($pluginInfos,$articlesInBasketIds,$sShippingcostsDifference,$sBasket)
     {
         $fillingArticles = [];
 
         if (!empty($pluginInfos['productStream'])) {
-
-            //********* get default criteria **************************************************************************/
-            $contextService = $this->contextService;
-            /** @var ProductContextInterface $context */
-            $context = $contextService->getShopContext();
-
-            $shop = $context->getShop();
-            if (empty($shop))
-                return $fillingArticles;
-
-            $category = $shop->getCategory();
-            if (empty($category))
-                return $fillingArticles;
-
-            //********* max filling article ***************************************************************************/
-            $categoryId = $category->getId();
-            $criteria = $this->criteriaFactory->createBaseCriteria([$categoryId], $context);
-            $criteria->offset(0)
-                ->limit($pluginInfos['maxArticle']);
-
-            //********* filling article sorting ***********************************************************************/
-            if (!empty($pluginInfos['sorting'])) {
-                switch($pluginInfos['sorting']) {
-                    case 'randomly':
-                        $criteria->addSorting(new RandomSorting(SortingInterface::SORT_DESC));
-                        break;
-                    case 'price ascending':
-                        $criteria->addSorting(new PriceSorting(SortingInterface::SORT_ASC));
-                        break;
-                    case 'price descending':
-                        $criteria->addSorting(new PriceSorting(SortingInterface::SORT_DESC));
-                        break;
-                    case 'votes descending':
-                        $criteria->addSorting(new VoteSorting(SortingInterface::SORT_DESC));
-                        break;
-                    case 'stock ascending':
-                        $criteria->addSorting(new ProductStockSorting(SortingInterface::SORT_ASC));
-                        break;
-                    case 'stock descending':
-                        $criteria->addSorting(new ProductStockSorting(SortingInterface::SORT_DESC));
-                        break;
-                }
-            }
-            //********* only filling articles that are no already in the basket ***************************************/
-            $criteria->addBaseCondition(new NotInArticleIds($articlesInBasketIds));
+            $return = $this->createContextAndCriteria($pluginInfos,$articlesInBasketIds,$sShippingcostsDifference,$sBasket);
+            $criteria = $return['criteria'];
+            $context = $return['context'];
 
             //********* get product stream model by name from plugin config *******************************************/
             /** @var ProductStream[] $productSteams */
@@ -287,44 +266,176 @@ class Frontend implements SubscriberInterface
                 ->getQuery()
                 ->getResult();
 
-            //********* get filling articles from product streams *****************************************************/
-            if (!empty($productSteams)) {
+                //********* get filling articles from product streams *****************************************************/
+                if (!empty($productSteams)) {
 
-                $fillingArticles = [];
-                foreach ($productSteams as $productSteam) {
+                    $fillingArticles = [];
+                    foreach ($productSteams as $productSteam) {
 
-                    $this->streamRepository->prepareCriteria($criteria, $productSteam->getId());
-                    $variantSearch = $this->variantSearch;
-                    $searchQuery = $variantSearch->search($criteria,$context);
-                    if (empty($searchQuery))
-                        continue;
+                        $this->streamRepository->prepareCriteria($criteria, $productSteam->getId());
+                        $variantSearch = $this->variantSearch;
+                        $searchQuery = $variantSearch->search($criteria,$context);
+                        if (empty($searchQuery))
+                            continue;
 
-                    $products = $searchQuery->getProducts();
-                    if (empty($products))
-                        continue;
+                        $products = $searchQuery->getProducts();
+                        if (empty($products))
+                            continue;
 
-                    $articleFromProductStream = $this->legacyStructConverter->convertListProductStructList($products);
-                    if (empty($articleFromProductStream))
-                        continue;
+                        $articleFromProductStream = $this->legacyStructConverter->convertListProductStructList($products);
+                        if (empty($articleFromProductStream))
+                            continue;
 
-                    $fillingArticles = array_merge($fillingArticles,$articleFromProductStream);
+                        $fillingArticles = array_merge($fillingArticles,$articleFromProductStream);
+                    }
                 }
-            }
         }
 
         return $fillingArticles;
     }
 
-    private function getFillingArticlesFromTopSeller($isTopSeller,$maxArticle)
-    {
-        if (empty($isTopSeller))
+    private function getFillingArticlesFromTopSeller($pluginInfos, $articlesInBasketIds,$sShippingcostsDifference,$sBasket) {
+        if (empty($pluginInfos['topSeller']))
             return [];
 
-        $topSeller = Shopware()->Modules()->Articles()->sGetArticleCharts();
-        if (empty($maxArticle))
-            return $topSeller;
+        $return = $this->createContextAndCriteria($pluginInfos,$articlesInBasketIds,$sShippingcostsDifference,$sBasket);
+        if (empty($return))
+            return [];
 
-        return array_slice($topSeller,0,$maxArticle);
+        $criteria = $return['criteria'];
+        $context = $return['context'];
+
+        $criteria->addSorting(new PopularitySorting(SortingInterface::SORT_DESC));
+
+        $criteria->setFetchCount(false);
+
+        $variantSearch = $this->variantSearch;
+        $searchQuery = $variantSearch->search($criteria,$context);
+
+        if (empty($searchQuery))
+            return [];
+
+        $products = $searchQuery->getProducts();
+        if (empty($products))
+            return [];
+
+        $topSeller = $this->legacyStructConverter->convertListProductStructList($products);
+
+        if (empty($topSeller))
+            return [];
+
+        return $topSeller;
+    }
+
+    private function createContextAndCriteria($pluginInfos,$articlesInBasketIds,$sShippingcostsDifference,$sBasket)
+    {
+        //********* get default criteria **************************************************************************/
+        $contextService = $this->contextService;
+        /** @var ProductContextInterface $context */
+        $context = $contextService->getShopContext();
+
+        $shop = $context->getShop();
+        if (empty($shop))
+            return [];
+
+        $category = $shop->getCategory();
+        if (empty($category))
+            return [];
+
+        //********* max filling article ****************************************************************************/
+        $categoryId = $category->getId();
+        $criteria = $this->criteriaFactory->createBaseCriteria([$categoryId], $context);
+        $criteria->offset(0)
+            ->limit($pluginInfos['maxArticle']);
+
+
+        //********* filling article conditions ************************************************************************/
+        $criteria->addBaseCondition(new NotInArticleIdsCondition($articlesInBasketIds));
+
+        $minimumArticlePrice = ($pluginInfos['minimumArticlePrice'] ? $pluginInfos['minimumArticlePrice'] : 0.00);
+
+        if ($pluginInfos['minimumArticlePriceUnit'] == '%') {
+            $minimumArticlePrice = $sShippingcostsDifference / 100 * $minimumArticlePrice;
+        }
+
+        $maximumArticlePrice = ($pluginInfos['maximumArticlePrice'] ? $pluginInfos['maximumArticlePrice'] : 0.00);
+        if ($pluginInfos['maximumArticlePriceUnit'] == '%') {
+            $maximumArticlePrice = $sShippingcostsDifference / 100 * $maximumArticlePrice;
+        }
+
+        $criteria->addCondition(new PriceCondition($minimumArticlePrice, $maximumArticlePrice));
+
+        if (!$pluginInfos['isCombineAllowed'])
+            $criteria->addCondition(new CombineContion($sShippingcostsDifference));
+
+        // maximun overhang
+        if (!empty($pluginInfos['maximumOverhang'])) {
+            $criteria->addCondition(new MaxOverhangCondition([
+                'sShippingcostsDifference' => $sShippingcostsDifference,
+                'maximumOverhang' => $pluginInfos['maximumOverhang']
+            ]));
+        }
+
+        // categories and suppliers
+        switch ($pluginInfos['consider']) {
+            case 'category':
+                $criteria->addCondition(new CategoryCondition($this->getCategoryIdsFromArticleIds($articlesInBasketIds)));
+                break;
+            case 'supplier':
+                $criteria->addCondition(new ManufacturerCondition($this->getSupplierIdsFromBasket($sBasket)));
+                break;
+            case 'categoryAndSupplier':
+                $criteria->addCondition(new CombinedCondition([
+                    new CategoryCondition($this->getCategoryIdsFromArticleIds($articlesInBasketIds)),
+                    new ManufacturerCondition($this->getSupplierIdsFromBasket($sBasket))
+                ]));
+                break;
+            case 'categoryOrSupplier':
+                //TODO*luhmann geht so nicht
+                $criteria->addCondition(new SeparatelyCondition([
+                    new CategoryCondition($this->getCategoryIdsFromArticleIds($articlesInBasketIds)),
+                    new ManufacturerCondition($this->getSupplierIdsFromBasket($sBasket))
+                ]));
+
+                break;
+            default:
+                break;
+        }
+
+        if (!empty($pluginInfos['similarArticles'])) {
+            foreach ($articlesInBasketIds as $articlesInBasketId) {
+                $criteria->addCondition(new SimilarProductCondition($articlesInBasketId,null));
+            }
+        }
+
+        //********* filling article sorting ***********************************************************************/
+        if (!empty($pluginInfos['sorting'])) {
+            switch($pluginInfos['sorting']) {
+                case 'randomly':
+                    $criteria->addSorting(new RandomSorting(SortingInterface::SORT_DESC));
+                    break;
+                case 'price ascending':
+                    $criteria->addSorting(new PriceSorting(SortingInterface::SORT_ASC));
+                    break;
+                case 'price descending':
+                    $criteria->addSorting(new PriceSorting(SortingInterface::SORT_DESC));
+                    break;
+                case 'votes descending':
+                    $criteria->addSorting(new VoteSorting(SortingInterface::SORT_DESC));
+                    break;
+                case 'stock ascending':
+                    $criteria->addSorting(new ProductStockSorting(SortingInterface::SORT_ASC));
+                    break;
+                case 'stock descending':
+                    $criteria->addSorting(new ProductStockSorting(SortingInterface::SORT_DESC));
+                    break;
+            }
+        }
+
+        return [
+            'criteria' => $criteria,
+            'context' => $context
+        ];
     }
 
     private function getArticleIdsFromBasket($basket) {
@@ -414,9 +525,9 @@ class Frontend implements SubscriberInterface
 
             // maximun overhang
             if (!empty($pluginInfos['maximumOverhang'])) {
-                $qb ->andWhere('(prices.price - '.$sShippingcostsDifference.') <= :over_hang')
+                $qb ->andWhere('(prices.price - '.$sShippingcostsDifference.') <= :overhang')
                     ->setParameter(
-                        'over_hang',$pluginInfos['maximumOverhang']
+                        'overhang',$pluginInfos['maximumOverhang']
                     )
                 ;
             }
@@ -497,7 +608,13 @@ class Frontend implements SubscriberInterface
             ->leftJoin('category.articles','article')
             ->where('article.id IN (:articleIDs)')
             ->setParameter('articleIDs',$articleIDs);
-        return $qb->getQuery()->getResult();
+
+        $categoriesIds = $qb->getQuery()->getResult();
+        $categoriesIdsWithoutAssoc = [];
+        foreach ($categoriesIds as $categoriesId) {
+            $categoriesIdsWithoutAssoc[] = $categoriesId['id'];
+        }
+        return $categoriesIdsWithoutAssoc;
     }
 
     private function getSupplierIdsFromBasket($sBasket) {
@@ -513,7 +630,8 @@ class Frontend implements SubscriberInterface
             $supplierID = $articleFromBasket['additional_details']['supplierID'];
             if (empty($supplierID))
                 continue;
-            $supplierID[$supplierID] = $supplierID;
+
+            $supplierIDs[$supplierID] = $supplierID;
         }
         return $supplierIDs;
     }

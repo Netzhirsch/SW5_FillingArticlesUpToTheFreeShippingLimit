@@ -25,21 +25,21 @@
 namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundleDBAL\Condition;
 
 use Doctrine\DBAL\Connection;
-use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\NotInArticleIds;
+use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\NotInArticleIdsCondition;
 use Shopware\Bundle\SearchBundle\Condition\ProductIdCondition;
 use Shopware\Bundle\SearchBundle\ConditionInterface;
 use Shopware\Bundle\SearchBundleDBAL\ConditionHandlerInterface;
 use Shopware\Bundle\SearchBundleDBAL\QueryBuilder;
 use Shopware\Bundle\StoreFrontBundle\Struct\ShopContextInterface;
 
-class NotInArticleIdsHandler implements ConditionHandlerInterface
+class NotInArticleIdsConditionHandler implements ConditionHandlerInterface
 {
     /**
      * {@inheritdoc}
      */
     public function supportsCondition(ConditionInterface $condition)
     {
-        return $condition instanceof NotInArticleIds;
+        return $condition instanceof NotInArticleIdsCondition;
     }
 
     /**

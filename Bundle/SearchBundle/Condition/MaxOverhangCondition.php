@@ -2,24 +2,20 @@
 
 namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition;
 
-use JsonSerializable;
 use Shopware\Bundle\SearchBundle\ConditionInterface;
 
-class NotInArticleIds implements ConditionInterface, JsonSerializable
+class MaxOverhangCondition implements ConditionInterface
 {
-    private const NAME = 'productids';
+    private const NAME = 'data';
+
+    protected $data;
 
     /**
-     * @var int[]
+     * @param float[] $data
      */
-    protected $productIds;
-
-    /**
-     * @param int[] $productIds
-     */
-    public function __construct(array $productIds)
+    public function __construct($data)
     {
-        $this->productIds = $productIds;
+        $this->data = $data;
     }
 
     /**
@@ -31,11 +27,11 @@ class NotInArticleIds implements ConditionInterface, JsonSerializable
     }
 
     /**
-     * @return int[]
+     * @return float[]
      */
-    public function getProductIds()
+    public function getData()
     {
-        return $this->productIds;
+        return $this->data;
     }
 
     /**
