@@ -244,9 +244,9 @@
                     <label lang="de">Preis absteigend</label>
                 </option>
                 <option>
-                    <value>votes ascending</value>
-                    <label>votes ascending</label>
-                    <label lang="de">Bewertungen aufsteigend</label>
+                    <value>votes descending</value>
+                    <label>votes descending</label>
+                    <label lang="de">Bewertungen absteigend</label>
                 </option>
                 <option>
                     <value>stock ascending</value>

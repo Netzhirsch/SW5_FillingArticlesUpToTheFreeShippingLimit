@@ -20,6 +20,9 @@
         <service id="shopware_searchdbal.shopware_searchdbal.vote_sorting_handler_dbal" class="NetzhirschFillingArticlesUpToTheFreeShippingLimit\Sorting\VoteSortingHandler">
             <tag name="sorting_handler_dbal"/>
         </service>
+        <service id="shopware_searchdbal.shopware_searchdbal.not_article_ids_handler_dbal" class="NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundleDBAL\Condition\NotInArticleIdsHandler">
+            <tag name="condition_handler_dbal"/>
+        </service>
     </services>
 
 </container>

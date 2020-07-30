@@ -6,8 +6,10 @@ use Enlight\Event\SubscriberInterface;
 use Enlight_Event_EventArgs;
 use Enlight_Exception;
 use Enlight_View_Default;
+use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\NotInArticleIds;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Sorting\VoteSorting;
 use Shopware\Bundle\SearchBundle\Sorting\PriceSorting;
+use Shopware\Bundle\SearchBundle\Sorting\ProductStockSorting;
 use Shopware\Bundle\SearchBundle\Sorting\RandomSorting;
 use Shopware\Bundle\SearchBundle\SortingInterface;
 use Shopware\Bundle\SearchBundle\StoreFrontCriteriaFactory;
@@ -171,16 +173,18 @@ class Frontend implements SubscriberInterface
 
     private function getFillingArticles($sBasket,$pluginInfos,$sShippingcostsDifference) {
 
-        $fillingArticles
-            = $this->getFillingArticlesFromProductStreams($pluginInfos);
-        if (!empty($fillingArticles))
-            return $fillingArticles;
-
         $fillingArticles = $this->getFillingArticlesFromTopseller($pluginInfos['topSeller'],$pluginInfos['maxArticle']);
         if (!empty($fillingArticles))
             return $fillingArticles;
 
         $articleIds = $this->getArticleIdsFromBasket($sBasket);
+
+        $fillingArticles
+            = $this->getFillingArticlesFromProductStreams($pluginInfos,$articleIds);
+        if (!empty($fillingArticles))
+            return $fillingArticles;
+
+
 
         //********* exlude articles by plugin setting *****************************************************************/
         if (!empty($pluginInfos['excludedArticles'])) {
@@ -221,7 +225,7 @@ class Frontend implements SubscriberInterface
      * @param array $pluginInfos
      * @return array $fillingArticles
      */
-    private function getFillingArticlesFromProductStreams($pluginInfos)
+    private function getFillingArticlesFromProductStreams($pluginInfos,$articlesInBasketIds)
     {
         $fillingArticles = [];
 
@@ -240,30 +244,41 @@ class Frontend implements SubscriberInterface
             if (empty($category))
                 return $fillingArticles;
 
+            //********* max filling article ***************************************************************************/
             $categoryId = $category->getId();
             $criteria = $this->criteriaFactory->createBaseCriteria([$categoryId], $context);
             $criteria->offset(0)
                 ->limit($pluginInfos['maxArticle']);
 
-            $qb = $this->modelManager->createQueryBuilder();
+            //********* filling article sorting ***********************************************************************/
             if (!empty($pluginInfos['sorting'])) {
                 switch($pluginInfos['sorting']) {
+                    case 'randomly':
+                        $criteria->addSorting(new RandomSorting(SortingInterface::SORT_DESC));
+                        break;
                     case 'price ascending':
                         $criteria->addSorting(new PriceSorting(SortingInterface::SORT_ASC));
                         break;
                     case 'price descending':
                         $criteria->addSorting(new PriceSorting(SortingInterface::SORT_DESC));
                         break;
-                    case 'votes ascending':
+                    case 'votes descending':
                         $criteria->addSorting(new VoteSorting(SortingInterface::SORT_DESC));
                         break;
-                    case 'randomly':
-                        $criteria->addSorting(new RandomSorting(SortingInterface::SORT_DESC));
+                    case 'stock ascending':
+                        $criteria->addSorting(new ProductStockSorting(SortingInterface::SORT_ASC));
+                        break;
+                    case 'stock descending':
+                        $criteria->addSorting(new ProductStockSorting(SortingInterface::SORT_DESC));
                         break;
                 }
             }
+            //********* only filling articles that are no already in the basket ***************************************/
+            $criteria->addBaseCondition(new NotInArticleIds($articlesInBasketIds));
+
             //********* get product stream model by name from plugin config *******************************************/
             /** @var ProductStream[] $productSteams */
+            $qb = $this->modelManager->createQueryBuilder();
             $productSteams = $qb
                 ->select('productStream')
                 ->from(ProductStream::class,'productStream')
