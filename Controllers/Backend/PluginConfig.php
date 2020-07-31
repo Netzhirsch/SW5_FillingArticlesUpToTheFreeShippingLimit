@@ -30,8 +30,8 @@ class Shopware_Controllers_Backend_PluginConfig extends Shopware_Controllers_Bac
     public function getWhitelistedCSRFActions()
     {
         return [
-            'variantGroups',
-            'productStreams'
+            'getVariantGroups',
+            'getProductStreams'
         ];
     }
 }

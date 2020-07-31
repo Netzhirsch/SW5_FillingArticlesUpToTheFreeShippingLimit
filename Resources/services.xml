@@ -57,7 +57,7 @@
 
         <service
                 id="shopware_searchdbal.shopware_searchdbal.vote_sorting_handler_dbal"
-                class="NetzhirschFillingArticlesUpToTheFreeShippingLimit\Sorting\VoteSortingHandler"
+                class="NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundleDBAL\Sorting\VoteSortingHandler"
         >
             <tag name="sorting_handler_dbal"/>
         </service>
