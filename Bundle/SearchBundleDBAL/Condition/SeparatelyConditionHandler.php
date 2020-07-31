@@ -4,7 +4,6 @@
 namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundleDBAL\Condition;
 
 
-use Exception;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\SeparatelyCondition;
 use Shopware\Bundle\SearchBundle\ConditionInterface;
 use Shopware\Bundle\SearchBundleDBAL\ConditionHandlerInterface;
@@ -40,32 +39,26 @@ class SeparatelyConditionHandler  implements ConditionHandlerInterface
         QueryBuilder $query,
         ShopContextInterface $context
     ) {
-        $query->addState($condition->getName());
 
-        foreach ($condition->getConditions() as $innerCondition) {
-            $handler = $this->getConditionHandler($innerCondition);
-            $handler->generateCondition($innerCondition, $query, $context);
-        }
-    }
+        /** @var SeparatelyCondition $condition */
+        $data = $condition->getData();
+        $categoryIDs = $data['categoryIDs'];
+        $supplierIDs = $data['supplierIDs'];
 
-    /**
-     * @throws \Exception
-     *
-     * @return ConditionHandlerInterface
-     */
-    private function getConditionHandler(ConditionInterface $condition)
-    {
-        //initialize the condition handler collection service
-        $this->container->get('shopware_searchdbal.dbal_query_builder_factory');
-
-        $handlers = $this->container->get('shopware_searchdbal.condition_handlers');
-
-        foreach ($handlers as $handler) {
-            if ($handler->supportsCondition($condition)) {
-                return $handler;
-            }
-        }
-
-        throw new Exception(sprintf('Condition %s not supported', get_class($condition)));
+        $query
+            ->leftJoin(
+            'product',
+            's_articles_categories',
+            'categories',
+            'product.id = categories.articleID')
+            ->leftJoin(
+            'product',
+            's_articles_supplier',
+            'supplier',
+            'product.supplierID = supplier.id')
+            ->andWhere('categories.id IN (:categoryIDs) OR supplier.id IN (:supplierIDs)')
+            ->setParameter('categoryIDs', $categoryIDs)
+            ->setParameter('supplierIDs', $supplierIDs)
+        ;
     }
 }

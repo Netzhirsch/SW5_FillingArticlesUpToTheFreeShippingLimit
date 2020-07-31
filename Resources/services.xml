@@ -3,35 +3,92 @@
            xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
 
     <services>
-        <service id="netzhirsch.filling.articles.up.to.the.free.shipping.limit.frontend" class="NetzhirschFillingArticlesUpToTheFreeShippingLimit\Subscriber\Frontend">
+        <service
+                id="netzhirsch_filling_articles_up_to_the_free_shipping_limit.subscriber.frontend"
+                class="NetzhirschFillingArticlesUpToTheFreeShippingLimit\Subscriber\Frontend"
+        >
             <tag name="shopware.event_subscriber"/>
-            <argument>%netzhirsch_filling_articles_up_to_the_free_shipping_limit.plugin_name%</argument>
             <argument id="shopware.plugin.cached_config_reader" type="service"/>
+            <argument>%netzhirsch_filling_articles_up_to_the_free_shipping_limit.plugin_name%</argument>
+            <argument
+                    type="service"
+                    id="netzhirsch_filling_articles_up_to_the_free_shipping_limit.services.filling_article_getter"
+            />
             <argument>%netzhirsch_filling_articles_up_to_the_free_shipping_limit.plugin_dir%</argument>
-            <argument type="service" id="models"/>
+            <argument type="service" id="snippets"/>
             <argument type="service" id="shopware_storefront.context_service"/>
-            <argument type="service" id="shopware_search.store_front_criteria_factory"/>
-            <argument type="service" id="shopware_product_stream.repository"/>
+        </service>
+
+        <service
+                class="NetzhirschFillingArticlesUpToTheFreeShippingLimit\Services\FillingArticleGetter"
+                id="netzhirsch_filling_articles_up_to_the_free_shipping_limit.services.filling_article_getter"
+        >
+
+            <argument
+                    type="service"
+                    id="netzhirsch_filling_articles_up_to_the_free_shipping_limit.services.filling_article_repository"
+            />
+            <argument
+                    type="service"
+                    id="netzhirsch_filling_articles_up_to_the_free_shipping_limit.services.id_from_assign"
+            />
+        </service>
+
+        <service
+                class="NetzhirschFillingArticlesUpToTheFreeShippingLimit\Services\FillingArticleRepository"
+                id="netzhirsch_filling_articles_up_to_the_free_shipping_limit.services.filling_article_repository"
+        >
             <argument type="service" id="shopware_search.variant_search"/>
             <argument type="service" id="legacy_struct_converter"/>
-            <argument type="service" id="shopware_searchdbal.price_sorting_handler_sorting_handler_dbal"/>
-            <argument type="service" id="shopware_searchdbal.dbal_query_builder_factory"/>
+            <argument type="service" id="models"/>
+            <argument type="service" id="shopware_product_stream.repository"/>
+            <argument type="service" id="netzhirsch_filling_articles_up_to_the_free_shipping_limit.services.id_from_assign"/>
+            <argument type="service" id="shopware_storefront.context_service"/>
+            <argument type="service" id="shopware_product_stream.criteria_factory"/>
         </service>
-        <service id="shopware_searchdbal.shopware_searchdbal.vote_sorting_handler_dbal" class="NetzhirschFillingArticlesUpToTheFreeShippingLimit\Sorting\VoteSortingHandler">
+
+        <service
+                class="NetzhirschFillingArticlesUpToTheFreeShippingLimit\Services\IdFromAssign"
+                id="netzhirsch_filling_articles_up_to_the_free_shipping_limit.services.id_from_assign"
+        >
+        </service>
+
+        <service
+                id="shopware_searchdbal.shopware_searchdbal.vote_sorting_handler_dbal"
+                class="NetzhirschFillingArticlesUpToTheFreeShippingLimit\Sorting\VoteSortingHandler"
+        >
             <tag name="sorting_handler_dbal"/>
         </service>
-        <service id="shopware_searchdbal.shopware_searchdbal.not_article_ids_condition_handler_dbal" class="NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundleDBAL\Condition\NotInArticleIdsConditionHandler">
+
+
+        <service
+                id="shopware_searchdbal.shopware_searchdbal.not_article_ids_condition_handler_dbal"
+                class="NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundleDBAL\Condition\NotInArticleIdsConditionHandler"
+        >
             <tag name="condition_handler_dbal"/>
         </service>
-        <service id="shopware_searchdbal.shopware_searchdbal.combine_condition_handler_dbal" class="NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundleDBAL\Condition\CombineConditionHandler">
+
+        <service
+                id="shopware_searchdbal.shopware_searchdbal.combine_condition_handler_dbal"
+                 class="NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundleDBAL\Condition\CombineConditionHandler"
+        >
             <tag name="condition_handler_dbal"/>
             <argument type="service" id="shopware_searchdbal.listing_price_switcher"/>
         </service>
-        <service id="shopware_searchdbal.shopware_searchdbal.max_overhang_condition_handler_dbal" class="NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundleDBAL\Condition\MaxOverhangConditionHandler">
+
+        <service
+                id="shopware_searchdbal.shopware_searchdbal.max_overhang_condition_handler_dbal"
+                class="NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundleDBAL\Condition\MaxOverhangConditionHandler"
+        >
             <tag name="condition_handler_dbal"/>
+
             <argument type="service" id="shopware_searchdbal.listing_price_switcher"/>
         </service>
-        <service id="shopware_searchdbal.shopware_searchdbal.separately_condition_handler_dbal" class="NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundleDBAL\Condition\SeparatelyConditionHandler">
+
+        <service
+                id="shopware_searchdbal.shopware_searchdbal.separately_condition_handler_dbal"
+                class="NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundleDBAL\Condition\SeparatelyConditionHandler"
+        >
             <tag name="condition_handler_dbal"/>
             <argument type="service" id="service_container"/>
         </service>

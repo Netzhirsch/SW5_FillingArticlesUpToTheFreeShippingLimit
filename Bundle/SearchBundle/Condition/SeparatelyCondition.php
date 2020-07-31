@@ -7,37 +7,32 @@ use Shopware\Bundle\SearchBundle\ConditionInterface;
 
 class SeparatelyCondition implements ConditionInterface, JsonSerializable
 {
-    /**
-     * @var ConditionInterface[]
-     */
-    protected $conditions;
+    private const NAME = 'data';
+
+    protected $data;
 
     /**
-     * @param ConditionInterface[] $conditions
+     * @param float[] $data
      */
-    public function __construct(array $conditions)
+    public function __construct($data)
     {
-        $this->conditions = $conditions;
+        $this->data = $data;
     }
 
     /**
-     * @return string
+     * {@inheritdoc}
      */
     public function getName()
     {
-        $classes = array_map(function ($class) {
-            return get_class($class);
-        }, $this->conditions);
-
-        return 'combined_facet_' . md5(json_encode($this->conditions) . json_encode($classes));
+        return self::NAME;
     }
 
     /**
-     * @return ConditionInterface[]
+     * @return float[]
      */
-    public function getConditions()
+    public function getData()
     {
-        return $this->conditions;
+        return $this->data;
     }
 
     /**
