@@ -4,8 +4,8 @@ namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit\Subscriber;
 use Doctrine\Common\Collections\ArrayCollection;
 use Enlight\Event\SubscriberInterface;
 use Enlight_Event_EventArgs;
-use Enlight_Exception;
 use Enlight_View_Default;
+use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Services\ArticleFromAssign;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Services\FillingArticleGetter;
 use Shopware\Bundle\StoreFrontBundle\Service\Core\ContextService;
 use Shopware\Components\Plugin\ConfigReader;
@@ -16,7 +16,6 @@ use Shopware_Components_Snippet_Manager;
 
 class Frontend implements SubscriberInterface
 {
-    //********* addTemplate() ****************************************************************************************/
     /**
      * @var ConfigReader
      */
@@ -46,13 +45,19 @@ class Frontend implements SubscriberInterface
      */
     private $contextService;
 
+    /**
+     * @var ArticleFromAssign
+     */
+    private $articleFromAssign;
+
     public function __construct(
         ConfigReader $config,
         $pluginName,
         FillingArticleGetter $fillingArticleGetter,
         $pluginDirectory,
         Shopware_Components_Snippet_Manager $snippetManager,
-        ContextService $contextService
+        ContextService $contextService,
+        ArticleFromAssign $articleFromAssign
     )
     {
         $this->config = $config;
@@ -61,6 +66,7 @@ class Frontend implements SubscriberInterface
         $this->pluginDirectory = $pluginDirectory;
         $this->snippetManager = $snippetManager;
         $this->contextService = $contextService;
+        $this->articleFromAssign = $articleFromAssign;
     }
 
     /**
@@ -95,57 +101,71 @@ class Frontend implements SubscriberInterface
 
     /**
      * @param Enlight_Event_EventArgs $args
-     * @throws Enlight_Exception
      */
     public function addTemplate(Enlight_Event_EventArgs $args)
     {
         /** @var Enlight_View_Default $view */
         $view = $args->get('subject')->View();
 
-        // no filling articles if basket price is ofer SCFB
         $assign = $view->getAssign();
+
+        $sShippingcostsDifference = $assign['sShippingcostsDifference'];
+        $view->assign(['message' => $this->getMessage($sShippingcostsDifference)]);
+
+        //********* no filling articles if basket price is ofer SCFB **************************************************/
         if (empty($assign['sShippingcostsDifference']))
             return;
 
+        //********* show hint to the filling articles *****************************************************************/
         $pluginInfos = $this->config->getByPluginName($this->pluginName);
+        $noteAboveBasket = false;
+        if (!empty($pluginInfos['noteAboveBasket']))
+            $noteAboveBasket = true;
 
-        $notAboveBasket = false;
-        // show hint to the filling articles
-        if (!empty($pluginInfos['notAboveBasket']))
-            $notAboveBasket = true;
+        $view->assign(['noteAboveBasket' => $noteAboveBasket]);
 
-        $view->assign(['notAboveBasket' => $notAboveBasket]);
+        //********* show hint on basket article ***********************************************************************/
+        $noteArticle = false;
+        if (!empty($pluginInfos['noteArticle'])) {
+            $noteArticle = true;
+            $sBasket = $assign['sBasket'];
+            $sBasket =
+                $this->articleFromAssign->assignMissingAmountToShippingCostFreeBoarder(
+                    $sBasket,
+                    $sShippingcostsDifference
+                );
+            $view->assign(['sBasket' => $sBasket]);
+            $view->assign(['CartInfoFreeShipping' => $this->getCartInfoFreeShipping()]);
+        }
 
-        $sShippingcostsDifference = $assign['sShippingcostsDifference'];
+        $view->assign(['noteArticle' => $noteArticle]);
+
         $fillingArticleGetter = $this->fillingArticleGetter;
 
         $fillingArticles
-            = $fillingArticleGetter->getFillingArticles($assign['sBasket'],$pluginInfos,$sShippingcostsDifference);
+            = $fillingArticleGetter->getFillingArticles($sBasket,$pluginInfos,$sShippingcostsDifference);
 
         if (!empty($fillingArticles)) {
             $view->assign(['displayVariants' => $pluginInfos['displayVariants']]);
             $view->assign(['fillingArticles' => $fillingArticles]);
-            $view->addTemplateDir($this->pluginDirectory . '/Resources/views');
         }
 
-        //********* warning message for ajax cart *********************************************************************/
-        $template = $view->Template();
-        $template_resource = $template->template_resource;
-        if ($template_resource != 'frontend/checkout/ajax_cart.tpl')
-            return;
 
-        if (empty($pluginInfos['notAboveBasket']))
-            return;
+        $view->addTemplateDir($this->pluginDirectory . '/Resources/views');
 
+    }
+
+    private function getMessage($sShippingcostsDifference)
+    {
         $message = '';
+
+        $cartInfoFreeShipping = $this->getCartInfoFreeShipping();
+        if (empty($cartInfoFreeShipping))
+            return $message;
+
         $snippetForCart = $this->snippetManager->getNamespace('frontend/checkout/cart');
         if (empty($snippetForCart))
-            return;
-
-        $cartInfoFreeShipping = $snippetForCart->offsetGet('CartInfoFreeShipping');
-        if (empty($cartInfoFreeShipping))
-            return;
-
+            return $message;
         $message .= '<strong>'.$cartInfoFreeShipping.'</strong>';
 
         $shopContext = $this->contextService->getShopContext();
@@ -156,12 +176,26 @@ class Frontend implements SubscriberInterface
 
         $cartInfoFreeShippingDifference = $snippetForCart->offsetGet('CartInfoFreeShippingDifference');
         if (empty($cartInfoFreeShippingDifference))
-            return;
+            return $message;
+
         $cartInfoFreeShippingDifference = str_replace('{$sShippingcostsDifference|',$sShippingcostsDifference,$cartInfoFreeShippingDifference);
         $cartInfoFreeShippingDifference = str_replace('currency}',$currencySymbol,$cartInfoFreeShippingDifference);
         $cartInfoFreeShippingDifference = str_replace('{$sCountry.countryname}',$countryName,$cartInfoFreeShippingDifference);
         $message .= $cartInfoFreeShippingDifference;
 
-        $view->assign(['message' => $message]);
+        return $message;
+    }
+
+    private function getCartInfoFreeShipping() {
+
+        $snippetForCart = $this->snippetManager->getNamespace('frontend/checkout/cart');
+        if (empty($snippetForCart))
+            return '';
+
+        return (
+            $snippetForCart->offsetGet('CartInfoFreeShipping')
+                ? $snippetForCart->offsetGet('CartInfoFreeShipping')
+                : ''
+        );
     }
 }

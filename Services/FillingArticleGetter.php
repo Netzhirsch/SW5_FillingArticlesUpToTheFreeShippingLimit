@@ -12,11 +12,11 @@ class FillingArticleGetter
     private $fillingArticleRepository;
 
     /**
-     * @var IdFromAssign
+     * @var ArticleFromAssign
      */
     private $idFromAssign;
 
-    public function __construct(FillingArticleRepository $fillingArticleRepository,IdFromAssign $idFromAssign)
+    public function __construct(FillingArticleRepository $fillingArticleRepository,ArticleFromAssign $idFromAssign)
     {
         $this->fillingArticleRepository = $fillingArticleRepository;
         $this->idFromAssign = $idFromAssign;

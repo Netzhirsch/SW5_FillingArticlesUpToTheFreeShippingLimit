@@ -3,9 +3,17 @@
         xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/shopware/shopware/5.3/engine/Shopware/Components/Plugin/schema/config.xsd">
     <elements>
         <element scope="shop" type="boolean">
-            <name>notAboveBasket</name>
+            <name>noteArticle</name>
+            <label lang="de">Hinweis neben Warenkorb Artikel</label>
+            <label>Note next to basket article</label>
+            <value>1</value>
+            <description lang="de">Wie viele von diesem Artikel bis zur Versandkosten-Freigrenze.</description>
+            <description>How many from this article to the free shipping limit.</description>
+        </element>
+        <element scope="shop" type="boolean">
+            <name>noteAboveBasket</name>
             <label lang="de">Hinweis oberhalb des Warenkorbes</label>
-            <label>Note above the basket.</label>
+            <label>Note above the basket</label>
             <value>1</value>
             <description lang="de">Unter dem Versandkostenfrei Hinweis wird zusätzlich "Hier finden Sie passende Artikel dazu." angezeigt. Diese Text kann über den Textbaustein "CartInfoFreeShippingFillingArticleMessage" angepasst werden.</description>
             <description>Under the free shipping note is also displayed "Here you will find matching items". This text can be adapted via the text module "CartInfoFreeShippingFillingArticleMessage".</description>

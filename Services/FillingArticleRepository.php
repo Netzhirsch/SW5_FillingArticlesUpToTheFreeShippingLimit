@@ -55,7 +55,7 @@ class FillingArticleRepository
     private $repositoryInterface;
 
     /**
-     * @var IdFromAssign
+     * @var ArticleFromAssign
      */
     private $idFromAssign;
 
@@ -74,7 +74,7 @@ class FillingArticleRepository
         LegacyStructConverter $legacyStructConverter,
         ModelManager $modelManager,
         RepositoryInterface $repositoryInterface,
-        IdFromAssign $idFromAssign,
+        ArticleFromAssign $idFromAssign,
         ContextService $contextService,
         CriteriaFactory $criteriaFactory
     )

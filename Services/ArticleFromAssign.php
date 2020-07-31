@@ -4,14 +4,26 @@
 namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit\Services;
 
 
-class IdFromAssign
+class ArticleFromAssign
 {
-    public function getArticleIdsFromBasket($basket) {
-        if (empty($basket['content']))
+
+    public function assignMissingAmountToShippingCostFreeBoarder($sBasket,$sShippingcostsDifference) {
+        if (empty($sBasket['content']))
+            return [];
+
+        foreach ($sBasket['content'] as &$articleFromBasket) {
+            $amount = (int)round($articleFromBasket['price'] / $sShippingcostsDifference,0);
+            $articleFromBasket['MissingAmountToShippingCostFreeBoarder'] = $amount;
+        }
+        return $sBasket;
+    }
+
+    public function getArticleIdsFromBasket($sBasket) {
+        if (empty($sBasket['content']))
             return [];
 
         $articleIDs = [];
-        foreach ($basket['content'] as $articleFromBasket) {
+        foreach ($sBasket['content'] as $articleFromBasket) {
             if (empty($articleFromBasket['articleID']))
                 continue;
 
