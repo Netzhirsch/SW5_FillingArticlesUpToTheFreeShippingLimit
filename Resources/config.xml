@@ -18,6 +18,38 @@
             <description lang="de">Unter dem Versandkostenfrei Hinweis wird zusätzlich "Hier finden Sie passende Artikel dazu." angezeigt. Diese Text kann über den Textbaustein "CartInfoFreeShippingFillingArticleMessage" angepasst werden.</description>
             <description>Under the free shipping note is also displayed "Here you will find matching items". This text can be adapted via the text module "CartInfoFreeShippingFillingArticleMessage".</description>
         </element>
+        <element scope="shop" type="boolean">
+            <name>viewInAjaxBasket</name>
+            <label>also in ajax basket</label>
+            <label lang="de">Anzeige im Ajax-Warenkorb</label>
+        </element>
+        <element scope="shop" type="combo">
+            <name>displayVariants</name>
+            <label lang="de">Anzeige Varianten</label>
+            <label>display variants</label>
+            <store>
+                <option>
+                    <value>show under the basket</value>
+                    <label>show under the basket</label>
+                    <label lang="de">Anzeige unter dem Warenkorb</label>
+                </option>
+                <option>
+                    <value>popup</value>
+                    <label>popup</label>
+                    <label lang="de">Popup</label>
+                </option>
+                <option>
+                    <value>scroll out</value>
+                    <label>scroll out</label>
+                    <label lang="de">ausfahren</label>
+                </option>
+                <option>
+                    <value>scroll to</value>
+                    <label>scroll to</label>
+                    <label lang="de">hinfahren</label>
+                </option>
+            </store>
+        </element>
         <element scope="shop" type="number">
             <name>maxArticle</name>
             <label lang="de">Maximale Artikel-Anzahl im Slider</label>
@@ -25,72 +57,6 @@
             <value>20</value>
             <options>
                 <minValue>1</minValue>
-            </options>
-        </element>
-        <element scope="shop" type="select">
-            <name>variantsGroup</name>
-            <label>exclude variant groups</label>
-            <label lang="de">Varianten-Gruppen ausschließen</label>
-            <description lang="de">Wählen Sie z.B. Größe um zu verhindert, dass Füllartikel der Größe S vorgeschlagen werden, wenn im Warenkorb Artikel der Größe XL liegen.</description>
-            <description>Choose e.g. size to avoid that filling articles of size S are suggested if the shopping cart contains articles of size XL.</description>
-            <store>
-                <![CDATA[Ext.define('Me.Netzhirsch.Form', {
-                extend: 'Ext.data.Store',
-                fields: [
-                    { name:'id', type: 'int' },
-                    { name:'name', type: 'string' }
-                ],
-                autoLoad: true,
-                pageSize: 25,
-                proxy: {
-                    type: 'ajax',
-                    url: window.location.href.substr(0
-                        , window.location.href.indexOf('backend')) + 'backend/PluginConfig/getVariantGroups',
-                    reader: {
-                        type: 'json',
-                        root: 'data',
-                        totalProperty: 'total'
-                    }
-                }
-                }).create();//new ]]>
-            </store>
-            <options>
-                <multiSelect>true</multiSelect>
-                <valueField>id</valueField>
-                <displayField>name</displayField>
-            </options>
-        </element>
-        <element scope="shop" type="select">
-            <name>productStream</name>
-            <label>product stream</label>
-            <label lang="de">Product Streams berücksichtigen</label>
-            <description lang="de">Füllartikel ausschließlich aus diesen Product Streams wählen.</description>
-            <description>Choose filling articles exclusively from these product streams.</description>
-            <store>
-                <![CDATA[Ext.define('Me.Netzhirsch.Form', {
-                extend: 'Ext.data.Store',
-                fields: [
-                    { name:'id', type: 'int' },
-                    { name:'name', type: 'string' }
-                ],
-                autoLoad: true,
-                pageSize: 25,
-                proxy: {
-                    type: 'ajax',
-                    url: window.location.href.substr(0
-                        , window.location.href.indexOf('backend')) + 'backend/PluginConfig/getProductStreams',
-                    reader: {
-                        type: 'json',
-                        root: 'data',
-                        totalProperty: 'total'
-                    }
-                }
-                }).create();//new ]]>
-            </store>
-            <options>
-                <multiSelect>true</multiSelect>
-                <valueField>id</valueField>
-                <displayField>name</displayField>
             </options>
         </element>
         <element scope="shop" type="boolean">
@@ -165,6 +131,125 @@
             </options>
         </element>
         <element scope="shop" type="combo">
+            <name>sorting</name>
+            <label lang="de">Sortierung von den Füllartikel</label>
+            <label>Sorting of the filling articles</label>
+            <value>randomly</value>
+            <store>
+                <option>
+                    <value>randomly</value>
+                    <label>randomly</label>
+                    <label lang="de">Zufällig</label>
+                </option>
+                <option>
+                    <value>price ascending</value>
+                    <label>price ascending</label>
+                    <label lang="de">Preis aufsteigend</label>
+                </option>
+                <option>
+                    <value>price descending</value>
+                    <label>price descending</label>
+                    <label lang="de">Preis absteigend</label>
+                </option>
+                <option>
+                    <value>votes descending</value>
+                    <label>votes descending</label>
+                    <label lang="de">Bewertungen absteigend</label>
+                </option>
+                <option>
+                    <value>stock ascending</value>
+                    <label>stock ascending</label>
+                    <label lang="de">Lagerbestand aufsteigend</label>
+                </option>
+                <option>
+                    <value>stock descending</value>
+                    <label>stock descending</label>
+                    <label lang="de">Lagerbestand absteigend</label>
+                </option>
+                <option>
+                    <value>popularity ascending</value>
+                    <label>popularity ascending</label>
+                    <label lang="de">Beliebtheit aufsteigend</label>
+                </option>
+                <option>
+                    <value>popularity descending</value>
+                    <label>popularity descending</label>
+                    <label lang="de">Lagerbestand absteigend</label>
+                </option>
+            </store>
+        </element>
+        <element scope="shop" type="button">
+            <name>fillingArticleSeparator</name>
+            <label>filling articles filter</label>
+            <label lang="de">Füllartikel Filter</label>
+        </element>
+        <element scope="shop" type="select">
+            <name>variantsGroup</name>
+            <label>exclude variant groups</label>
+            <label lang="de">Varianten-Gruppen ausschließen</label>
+            <description lang="de">Wählen Sie z.B. Größe um zu verhindert, dass Füllartikel der Größe S vorgeschlagen werden, wenn im Warenkorb Artikel der Größe XL liegen.</description>
+            <description>Choose e.g. size to avoid that filling articles of size S are suggested if the shopping cart contains articles of size XL.</description>
+            <store>
+                <![CDATA[Ext.define('Me.Netzhirsch.Form', {
+                extend: 'Ext.data.Store',
+                fields: [
+                    { name:'id', type: 'int' },
+                    { name:'name', type: 'string' }
+                ],
+                autoLoad: true,
+                pageSize: 25,
+                proxy: {
+                    type: 'ajax',
+                    url: window.location.href.substr(0
+                        , window.location.href.indexOf('backend')) + 'backend/PluginConfig/getVariantGroups',
+                    reader: {
+                        type: 'json',
+                        root: 'data',
+                        totalProperty: 'total'
+                    }
+                }
+                }).create();//new ]]>
+            </store>
+            <options>
+                <multiSelect>true</multiSelect>
+                <valueField>id</valueField>
+                <displayField>name</displayField>
+            </options>
+        </element>
+        <element scope="shop" type="select">
+            <name>productStream</name>
+            <label>product stream</label>
+            <label lang="de">Product Streams berücksichtigen</label>
+            <description lang="de">Füllartikel ausschließlich aus diesen Product Streams wählen.</description>
+            <description>Choose filling articles exclusively from these product streams.</description>
+            <store>
+                <![CDATA[Ext.define('Me.Netzhirsch.Form', {
+                extend: 'Ext.data.Store',
+                fields: [
+                    { name:'id', type: 'int' },
+                    { name:'name', type: 'string' }
+                ],
+                autoLoad: true,
+                pageSize: 25,
+                proxy: {
+                    type: 'ajax',
+                    url: window.location.href.substr(0
+                        , window.location.href.indexOf('backend')) + 'backend/PluginConfig/getProductStreams',
+                    reader: {
+                        type: 'json',
+                        root: 'data',
+                        totalProperty: 'total'
+                    }
+                }
+                }).create();//new ]]>
+            </store>
+            <options>
+                <multiSelect>true</multiSelect>
+                <valueField>id</valueField>
+                <displayField>name</displayField>
+            </options>
+        </element>
+        <element scope="shop" type="combo">
             <name>consider</name>
             <label lang="de">Für die Füllartikel berücksichtigen</label>
             <label>for the filling articles consider</label>
@@ -229,76 +314,6 @@
             <name>topSeller</name>
             <label lang="de">Füllartikel aus Top Seller Artikeln</label>
             <label>Filling articles from top seller articles</label>
-        </element>
-        <element scope="shop" type="combo">
-            <name>sorting</name>
-            <label lang="de">Sortierung von den Füllartikel</label>
-            <label>Sorting of the filling articles</label>
-            <value>randomly</value>
-            <store>
-                <option>
-                    <value>randomly</value>
-                    <label>randomly</label>
-                    <label lang="de">Zufällig</label>
-                </option>
-                <option>
-                    <value>price ascending</value>
-                    <label>price ascending</label>
-                    <label lang="de">Preis aufsteigend</label>
-                </option>
-                <option>
-                    <value>price descending</value>
-                    <label>price descending</label>
-                    <label lang="de">Preis absteigend</label>
-                </option>
-                <option>
-                    <value>votes descending</value>
-                    <label>votes descending</label>
-                    <label lang="de">Bewertungen absteigend</label>
-                </option>
-                <option>
-                    <value>stock ascending</value>
-                    <label>stock ascending</label>
-                    <label lang="de">Lagerbestand aufsteigend</label>
-                </option>
-                <option>
-                    <value>stock descending</value>
-                    <label>stock descending</label>
-                    <label lang="de">Lagerbestand absteigend</label>
-                </option>
-            </store>
-        </element>
-        <element scope="shop" type="boolean">
-            <name>viewInAjaxBasket</name>
-            <label>also in ajax basket</label>
-            <label lang="de">Anzeige im Ajax-Warenkorb</label>
-        </element>
-        <element scope="shop" type="combo">
-            <name>displayVariants</name>
-            <label lang="de">Anzeige Varianten</label>
-            <label>display variants</label>
-            <store>
-                <option>
-                    <value>show under the basket</value>
-                    <label>show under the basket</label>
-                    <label lang="de">Anzeige unter dem Warenkorb</label>
-                </option>
-                <option>
-                    <value>popup</value>
-                    <label>popup</label>
-                    <label lang="de">Popup</label>
-                </option>
-                <option>
-                    <value>scroll out</value>
-                    <label>scroll out</label>
-                    <label lang="de">ausfahren</label>
-                </option>
-                <option>
-                    <value>scroll to</value>
-                    <label>scroll to</label>
-                    <label lang="de">hinfahren</label>
-                </option>
-            </store>
         </element>
     </elements>
 </config>

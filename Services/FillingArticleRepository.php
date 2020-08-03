@@ -30,6 +30,7 @@ use Shopware\Models\Article\Article;
 use Shopware\Models\Article\Detail;
 use Shopware\Models\Category\Category;
 use Shopware\Models\ProductStream\ProductStream;
+use Shopware_Components_Config;
 
 class FillingArticleRepository
 {
@@ -69,6 +70,11 @@ class FillingArticleRepository
      */
     private $criteriaFactory;
 
+    /**
+     * @var Shopware_Components_Config
+     */
+    private $config;
+
     public function __construct(
         VariantSearch $variantSearch,
         LegacyStructConverter $legacyStructConverter,
@@ -76,7 +82,8 @@ class FillingArticleRepository
         RepositoryInterface $repositoryInterface,
         ArticleFromAssign $idFromAssign,
         ContextService $contextService,
-        CriteriaFactory $criteriaFactory
+        CriteriaFactory $criteriaFactory,
+        Shopware_Components_Config $config
     )
     {
         $this->variantSearch = $variantSearch;
@@ -86,6 +93,7 @@ class FillingArticleRepository
         $this->idFromAssign = $idFromAssign;
         $this->contextService = $contextService;
         $this->criteriaFactory = $criteriaFactory;
+        $this->config = $config;
     }
 
     public function getFillingArticlesFromTopSeller($pluginInfos, $articlesInBasketIds,$sShippingcostsDifference,$sBasket) {
@@ -96,10 +104,17 @@ class FillingArticleRepository
         if (empty($return))
             return [];
 
+        $sLimitChart = $this->config['sCHARTRANGE'];
+        if (empty($sLimitChart)) {
+            $sLimitChart = 20;
+        }
+
         $criteria = $return['criteria'];
         $context = $return['context'];
 
         $criteria->addSorting(new PopularitySorting(SortingInterface::SORT_DESC));
+        $criteria->offset(0)
+            ->limit($sLimitChart);
 
         $criteria->setFetchCount(false);
 
