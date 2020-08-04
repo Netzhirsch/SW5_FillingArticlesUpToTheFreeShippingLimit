@@ -174,7 +174,7 @@
                 <option>
                     <value>popularity descending</value>
                     <label>popularity descending</label>
-                    <label lang="de">Lagerbestand absteigend</label>
+                    <label lang="de">Beliebtheit absteigend</label>
                 </option>
             </store>
         </element>
@@ -251,8 +251,8 @@
         </element>
         <element scope="shop" type="combo">
             <name>consider</name>
-            <label lang="de">Für die Füllartikel berücksichtigen</label>
-            <label>for the filling articles consider</label>
+            <label lang="de">Kategorie und/oder Hersteller berücksichtigen</label>
+            <label>Consider category and/or manufacturer</label>
             <description lang="de">Es werden nur Artikel z.B. aus Kategorien angezeigt, die bereits im Warenkorb vertreten sind.</description>
             <description>Only articles e.g. from categories that are already in the shopping cart are displayed.</description>
             <store>
@@ -295,25 +295,25 @@
         </element>
         <element scope="shop" type="boolean">
             <name>customersAlsoBought</name>
-            <label lang="de">Füllartikel aus Artikel die Kunden auch kauft haben.</label>
-            <label>Filling articles from articles that customers have also bought.</label>
+            <label lang="de">Kunden kauften auch berücksichtigen.</label>
+            <label>Consider Customers also bought.</label>
         </element>
         <element scope="shop" type="boolean">
             <name>similarArticles</name>
-            <label lang="de">Füllartikel aus ähnliche Artikel</label>
-            <label>similar articles</label>
+            <label lang="de">Ähnliche Artikel berücksichtigen.</label>
+            <label>Consider similar articles.</label>
             <description lang="de">Nur im Artikel verknüpfte ähnliche Artikel. Automatisch erzeugte ähnliche Artikel "Füllartikel berücksichtigen -> Kategorie" auswählen </description>
             <description>Only similar articles linked in the article. Automatically generated similar articles "Consider filling article -> Select category.</description>
         </element>
         <element scope="shop" type="boolean">
             <name>crossSelling</name>
-            <label lang="de">Füllartikel aus Cross Selling Artikeln</label>
-            <label>Filling articles from cross selling articles</label>
+            <label lang="de">Cross Selling berücksichtigen.</label>
+            <label>Consider cross selling</label>
         </element>
         <element scope="shop" type="boolean">
             <name>topSeller</name>
-            <label lang="de">Füllartikel aus Top Seller Artikeln</label>
-            <label>Filling articles from top seller articles</label>
+            <label lang="de">Top Seller berücksichtigen.</label>
+            <label>Consider top seller</label>
         </element>
     </elements>
 </config>
