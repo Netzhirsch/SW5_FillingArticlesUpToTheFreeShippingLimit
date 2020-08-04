@@ -124,16 +124,16 @@ class Frontend implements SubscriberInterface
 
         $view->assign(['noteAboveBasket' => $noteAboveBasket]);
 
+        $sBasket = $assign['sBasket'];
+        $sBasket =
+            $this->articleFromAssign->assignMissingAmountToShippingCostFreeBoarder(
+                $sBasket,
+                $sShippingcostsDifference
+            );
         //********* show hint on basket article ***********************************************************************/
         $noteArticle = false;
         if (!empty($pluginInfos['noteArticle'])) {
             $noteArticle = true;
-            $sBasket = $assign['sBasket'];
-            $sBasket =
-                $this->articleFromAssign->assignMissingAmountToShippingCostFreeBoarder(
-                    $sBasket,
-                    $sShippingcostsDifference
-                );
             $view->assign(['sBasket' => $sBasket]);
             $view->assign(['CartInfoFreeShipping' => $this->getCartInfoFreeShipping()]);
         }

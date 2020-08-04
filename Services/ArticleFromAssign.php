@@ -12,7 +12,7 @@ class ArticleFromAssign
             return [];
 
         foreach ($sBasket['content'] as &$articleFromBasket) {
-            $amount = (int)round($articleFromBasket['price'] / $sShippingcostsDifference,0);
+            $amount = ceil($sShippingcostsDifference / $articleFromBasket['price']);
             $articleFromBasket['MissingAmountToShippingCostFreeBoarder'] = $amount;
         }
         return $sBasket;
