@@ -7,7 +7,7 @@
             <label lang="de">Hinweis neben Warenkorb Artikel</label>
             <label>Note next to basket article</label>
             <value>1</value>
-            <description lang="de">Wie viele von diesem Artikel bis zur Versandkosten-Freigrenze. Dieser Text kann über den Textbaustein "CartInfoMissingAmountToShippingCostFreeBoarder" angepasst werden.</description>
+            <description lang="de">Wie viele von diesem Artikel bis zur Versandkosten-Freigrenze. Dieser Text kann über den Textbaustein "CartInfoMissingAmountToShippingCostFreeBoarder" angepasst werden, dabei ist die Variable $CartInfoFreeShipping der Textbaustein "CartInfoFreeShipping".</description>
             <description>How many from this article to the free shipping limit.</description>
         </element>
         <element scope="shop" type="boolean">
