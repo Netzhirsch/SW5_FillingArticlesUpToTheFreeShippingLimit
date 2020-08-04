@@ -47,6 +47,7 @@
             <argument type="service" id="netzhirsch_filling_articles_up_to_the_free_shipping_limit.services.article_from_assign"/>
             <argument type="service" id="shopware_storefront.context_service"/>
             <argument type="service" id="shopware_product_stream.criteria_factory"/>
+            <argument type="service" id="config"/>
         </service>
 
         <service

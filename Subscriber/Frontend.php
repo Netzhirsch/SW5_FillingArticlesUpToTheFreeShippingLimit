@@ -170,7 +170,9 @@ class Frontend implements SubscriberInterface
 
         $shopContext = $this->contextService->getShopContext();
         $country = $shopContext->getCountry();
-        $countryName = $country->getName();
+        $countryName = 'Deutschland';
+        if (!empty($country))
+            $countryName = $country->getName();
         $currency = $shopContext->getCurrency();
         $currencySymbol = $currency->getSymbol();
 

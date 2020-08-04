@@ -32,44 +32,49 @@ class FillingArticleGetter
             }
         }
         $fillingArticleRepository = $this->fillingArticleRepository;
+        $fillingArticles = [];
 
-        $fillingArticles = $fillingArticleRepository->getFillingArticlesFromTopseller(
+        $fillingArticles = array_merge($fillingArticles,$fillingArticleRepository->getFillingArticlesFromTopseller(
+            $fillingArticles,
             $pluginInfos,
             $articleIdsToExclude,
             $sShippingcostsDifference,
             $sBasket
-        );
-
-        if (!empty($fillingArticles))
-            return $fillingArticles;
+        ));
 
         $fillingArticles
-            = $fillingArticleRepository->getFillingArticlesFromProductStreams(
+            = array_merge($fillingArticles,$fillingArticleRepository->getFillingArticlesFromProductStreams(
             $pluginInfos,
             $articleIdsToExclude,
             $sShippingcostsDifference,
             $sBasket
-        );
+        ));
 
-        if (!empty($fillingArticles))
-            return $fillingArticles;
 
         //********* get article collection ****************************************************************************/
-        $query = $fillingArticleRepository->getQuery($articleIdsToExclude,$pluginInfos,$sShippingcostsDifference,$sBasket);
+        $query
+            = $fillingArticleRepository->getQuery($articleIdsToExclude,$pluginInfos,$sShippingcostsDifference,$sBasket);
         /** @var Article[] $articles */
         $articles = $query->getResult();
 
         //********* get the missing article data **********************************************************************/
-        $fillingArticles = [];
+        $fillingArticlesWithMissingArticleData = [];
         foreach ($articles as $article) {
 
             $return = $fillingArticleRepository->getOrdernumberAndFrontendArticle($article);
 
             if (empty($return))
                 continue;
-
-            $fillingArticles[$return['ordernumber']] = array_merge($fillingArticles,$return['articleForFrontend']);
+            $array = [
+                $return['ordernumber'] => $return['articleForFrontend']
+            ];
+            $fillingArticles = array_merge($fillingArticles,$array);
         }
+        $fillingArticles = array_merge($fillingArticles,$fillingArticlesWithMissingArticleData);
+
+        //********* sorting ****************************************************************************************/
+        $fillingArticles
+            = $fillingArticleRepository->getSortedFillingArticle($fillingArticles,$pluginInfos);
 
         return $fillingArticles;
     }
