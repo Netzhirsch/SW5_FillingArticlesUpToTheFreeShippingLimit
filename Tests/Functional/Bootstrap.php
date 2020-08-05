@@ -38,7 +38,7 @@ class NetzhirschFillingArticlesUpToTheFreeShippingLimitTestKernel extends Kernel
     /**
      * @return bool
      */
-    private static function isPluginInstalledAndActivated()
+    public static function isPluginInstalledAndActivated()
     {
         /** @var \Doctrine\DBAL\Connection $db */
         $db = Shopware()->Container()->get('dbal_connection');

@@ -50,11 +50,13 @@ class NotInArticleIdsConditionHandler implements ConditionHandlerInterface
         QueryBuilder $query,
         ShopContextInterface $context
     ) {
+        /* @var ProductIdCondition $condition */
+        if (empty($condition->getProductIds()))
+            return;
         $key = ':productIds' . md5(json_encode($condition));
 
         $query->andWhere('product.id NOT IN (' . $key . ')');
 
-        /* @var ProductIdCondition $condition */
         $query->setParameter(
             $key,
             $condition->getProductIds(),
