@@ -151,6 +151,7 @@ class FillingArticleRepository
 
     /**
      * Returns the fill articles according to the product streams.
+     * @param $fillingArticles
      * @param array $pluginInfos
      * @param $articlesInBasketIds
      * @param $sShippingcostsDifference
@@ -158,12 +159,12 @@ class FillingArticleRepository
      * @return array $fillingArticles
      */
     public function getFillingArticlesFromProductStreams(
+        $fillingArticles,
         $pluginInfos,
         $articlesInBasketIds,
         $sShippingcostsDifference,
         $sBasket
     ){
-        $fillingArticles = [];
         if (empty($pluginInfos['productStream']))
             return $fillingArticles;
 
@@ -187,7 +188,7 @@ class FillingArticleRepository
             //********* get filling articles from product streams *****************************************************/
         if (!empty($productSteams)) {
 
-                $fillingArticles = [];
+            $fillingArticles = [];
             foreach ($productSteams as $productSteam) {
 
                 $this->repositoryInterface->prepareCriteria($criteria, $productSteam->getId());
@@ -212,13 +213,15 @@ class FillingArticleRepository
         return $fillingArticles;
     }
 
-    public function getQuery(
+    public function getQueryForCategoryManufacture(
         $articleIds,
         $pluginInfos,
         $sShippingcostsDifference,
         $sBasket
     )
     {
+        if (empty(trim($pluginInfos['consider'])))
+            return null;
         // default query
         $qb = $this->modelManager->createQueryBuilder();
         $qb->select('article')

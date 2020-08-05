@@ -44,6 +44,7 @@ class FillingArticleGetter
 
         $fillingArticles
             = array_merge($fillingArticles,$fillingArticleRepository->getFillingArticlesFromProductStreams(
+            $fillingArticles,
             $pluginInfos,
             $articleIdsToExclude,
             $sShippingcostsDifference,
@@ -53,9 +54,10 @@ class FillingArticleGetter
 
         //********* get article collection ****************************************************************************/
         $query
-            = $fillingArticleRepository->getQuery($articleIdsToExclude,$pluginInfos,$sShippingcostsDifference,$sBasket);
+            = $fillingArticleRepository->getQueryForCategoryManufacture($articleIdsToExclude,$pluginInfos,$sShippingcostsDifference,$sBasket);
         /** @var Article[] $articles */
-        $articles = $query->getResult();
+        if (!empty($query))
+            $articles = $query->getResult();
 
         //********* get the missing article data **********************************************************************/
         $fillingArticlesWithMissingArticleData = [];
