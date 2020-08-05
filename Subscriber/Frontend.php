@@ -146,11 +146,8 @@ class Frontend implements SubscriberInterface
         if (!empty($fillingArticles)) {
             $view->assign(['displayVariants' => $pluginInfos['displayVariants']]);
             $view->assign(['fillingArticles' => $fillingArticles]);
+            $view->addTemplateDir($this->pluginDirectory . '/Resources/views');
         }
-
-
-        $view->addTemplateDir($this->pluginDirectory . '/Resources/views');
-
     }
 
     private function getMessage($sShippingcostsDifference)
