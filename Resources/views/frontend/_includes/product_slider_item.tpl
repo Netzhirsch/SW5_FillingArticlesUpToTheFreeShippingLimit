@@ -2,7 +2,7 @@
 
 {block name="frontend_common_product_slider_item"}
 
-    <div class="product-slider--item">
+    <div class="product-slider--item" style="width: 100%;">
 
         {include
             file="frontend/listing/box_article.tpl"

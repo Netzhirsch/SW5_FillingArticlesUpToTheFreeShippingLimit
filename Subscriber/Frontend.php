@@ -108,10 +108,8 @@ class Frontend implements SubscriberInterface
         $view = $args->get('subject')->View();
 
         $assign = $view->getAssign();
-
         $sShippingcostsDifference = $assign['sShippingcostsDifference'];
         $view->assign(['message' => $this->getMessage($sShippingcostsDifference)]);
-
         //********* no filling articles if basket price is ofer SCFB **************************************************/
         if (empty($assign['sShippingcostsDifference']))
             return;
@@ -180,7 +178,7 @@ class Frontend implements SubscriberInterface
         if (empty($cartInfoFreeShippingDifference))
             return $message;
 
-        $cartInfoFreeShippingDifference = str_replace('{$sShippingcostsDifference|',$sShippingcostsDifference,$cartInfoFreeShippingDifference);
+        $cartInfoFreeShippingDifference = str_replace('{$sShippingcostsDifference|',number_format($sShippingcostsDifference,2,",","."),$cartInfoFreeShippingDifference);
         $cartInfoFreeShippingDifference = str_replace('currency}',$currencySymbol,$cartInfoFreeShippingDifference);
         $cartInfoFreeShippingDifference = str_replace('{$sCountry.countryname}',$countryName,$cartInfoFreeShippingDifference);
         $message .= $cartInfoFreeShippingDifference;
