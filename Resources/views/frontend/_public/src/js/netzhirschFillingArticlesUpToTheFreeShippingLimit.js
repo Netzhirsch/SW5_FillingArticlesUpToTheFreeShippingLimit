@@ -5,7 +5,13 @@ $(document).ready(function () {
         addArticleToAjaxCart();
         fillingArticleSlider();
     });
+
     $.subscribe('plugin/swCollapseCart/onRemoveArticleFinished', function() {
+        addArticleToAjaxCart();
+        fillingArticleSlider();
+    });
+
+    $.subscribe('plugin/swCollapseCart/onArticleAdded', function() {
         addArticleToAjaxCart();
         fillingArticleSlider();
     });
