@@ -70,6 +70,7 @@ class FillingArticleRepositoryTest extends Enlight_Components_Test_Controller_Te
                     if (!empty(trim($pluginInfos['consider']))) {
                         $this->CategoryManufacture(
                             $fillingArticlesRepository,
+                            $fillingArticles,
                             $id,
                             $pluginInfos,
                             $sShippingcostsDifference
@@ -121,13 +122,14 @@ class FillingArticleRepositoryTest extends Enlight_Components_Test_Controller_Te
 
     private function CategoryManufacture(
         FillingArticleRepository $fillingArticlesRepository,
+        $fillingArticles,
         $id,
         $pluginInfos,
         $sShippingcostsDifference
     ){
         $fillingArticles =
             $fillingArticlesRepository
-                ->getQueryForCategoryManufacture([$id=>$id],$pluginInfos,$sShippingcostsDifference,[]);
+                ->getQueryForCategoryManufacture($fillingArticles,[$id=>$id],$pluginInfos,$sShippingcostsDifference,[]);
         $this->assertTrue(
             !empty($fillingArticles),
             'Zum Artikel: '

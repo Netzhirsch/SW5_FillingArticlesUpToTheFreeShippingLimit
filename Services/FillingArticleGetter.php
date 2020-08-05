@@ -2,8 +2,6 @@
 
 namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit\Services;
 
-use Shopware\Models\Article\Article;
-
 class FillingArticleGetter
 {
     /**
@@ -24,11 +22,11 @@ class FillingArticleGetter
 
     public function getFillingArticles($sBasket,$pluginInfos,$sShippingcostsDifference) {
 
-        $articleIdsToExclude = $this->idFromAssign->getArticleIdsFromBasket($sBasket);
+        $articlesInBasketIds = $this->idFromAssign->getArticleIdsFromBasket($sBasket);
         //********* exlude articles by plugin setting *****************************************************************/
         if (!empty($pluginInfos['excludedArticles'])) {
             foreach ($pluginInfos['excludedArticles'] as $excludedArticle) {
-                $articleIdsToExclude[$excludedArticle] = $excludedArticle;
+                $articlesInBasketIds[$excludedArticle] = $excludedArticle;
             }
         }
         $fillingArticleRepository = $this->fillingArticleRepository;
@@ -37,7 +35,7 @@ class FillingArticleGetter
         $fillingArticles = array_merge($fillingArticles,$fillingArticleRepository->getFillingArticlesFromTopseller(
             $fillingArticles,
             $pluginInfos,
-            $articleIdsToExclude,
+            $articlesInBasketIds,
             $sShippingcostsDifference,
             $sBasket
         ));
@@ -46,33 +44,21 @@ class FillingArticleGetter
             = array_merge($fillingArticles,$fillingArticleRepository->getFillingArticlesFromProductStreams(
             $fillingArticles,
             $pluginInfos,
-            $articleIdsToExclude,
+            $articlesInBasketIds,
             $sShippingcostsDifference,
             $sBasket
         ));
 
 
         //********* get article collection ****************************************************************************/
-        $query
-            = $fillingArticleRepository->getQueryForCategoryManufacture($articleIdsToExclude,$pluginInfos,$sShippingcostsDifference,$sBasket);
-        /** @var Article[] $articles */
-        if (!empty($query))
-            $articles = $query->getResult();
-
-        //********* get the missing article data **********************************************************************/
-        $fillingArticlesWithMissingArticleData = [];
-        foreach ($articles as $article) {
-
-            $return = $fillingArticleRepository->getOrdernumberAndFrontendArticle($article);
-
-            if (empty($return))
-                continue;
-            $array = [
-                $return['ordernumber'] => $return['articleForFrontend']
-            ];
-            $fillingArticles = array_merge($fillingArticles,$array);
-        }
-        $fillingArticles = array_merge($fillingArticles,$fillingArticlesWithMissingArticleData);
+        $fillingArticles
+            = array_merge($fillingArticles,$fillingArticleRepository->getQueryForCategoryManufacture(
+                $fillingArticles,
+                $articlesInBasketIds,
+                $pluginInfos,
+                $sShippingcostsDifference,
+                $sBasket
+        ));
 
         //********* sorting ****************************************************************************************/
         $fillingArticles
