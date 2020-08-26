@@ -228,6 +228,14 @@
             <label>filling articles filter</label>
             <label lang="de">Füllartikel Filter</label>
         </element>
+        <element scope="shop" type="boolean">
+            <name>topSeller</name>
+            <label lang="de">Top Seller berücksichtigen.</label>
+            <label>Consider top seller</label>
+            <value>1</value>
+            <description lang="de">Die in den Grundeinstellungen maximale Anzahl an Top Seller wird den Füllartikeln hinzugefügt und es wird als erste nach Top seller sortiert , danach nach der gewählten Sortierung.</description>
+            <description>The maximum number of Top Sellers in the basic settings will be added to the fill items and it will be sorted first by Top Seller, then by the selected sorting.</description>
+        </element>
         <element scope="shop" type="select">
             <name>productStream</name>
             <label>product stream</label>
@@ -309,18 +317,10 @@
             <description>Only similar articles linked in the article. Automatically generated similar articles "Consider filling article -> Select category.</description>
         </element>
         <element scope="shop" type="boolean">
-            <name>crossSelling</name>
-            <label lang="de">Cross Selling berücksichtigen.</label>
-            <label>Consider cross selling</label>
-            <value>1</value>
-        </element>
-        <element scope="shop" type="boolean">
-            <name>topSeller</name>
-            <label lang="de">Top Seller berücksichtigen.</label>
-            <label>Consider top seller</label>
-            <value>1</value>
-            <description lang="de">Die in den Grundeinstellungen maximale Anzahl an Top Seller wird den Füllartikeln hinzugefügt und es wird als erste nach Top seller sortiert , danach nach der gewählten Sortierung.</description>
-            <description>The maximum number of Top Sellers in the basic settings will be added to the fill items and it will be sorted first by Top Seller, then by the selected sorting.</description>
+            <name>accessories</name>
+            <label lang="de">Zubehör berücksichtigen.</label>
+            <label>accessories</label>
+            <value>0</value>
         </element>
     </elements>
 </config>

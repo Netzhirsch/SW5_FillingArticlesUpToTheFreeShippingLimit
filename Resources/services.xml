@@ -72,6 +72,13 @@
         </service>
 
         <service
+                id="shopware_searchdbal.shopware_searchdbal.accessories_condition_handle_dbal"
+                class="NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundleDBAL\Condition\AccessoriesConditionHandler"
+        >
+            <tag name="condition_handler_dbal"/>
+        </service>
+
+        <service
                 id="shopware_searchdbal.shopware_searchdbal.combine_condition_handler_dbal"
                  class="NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundleDBAL\Condition\CombineConditionHandler"
         >

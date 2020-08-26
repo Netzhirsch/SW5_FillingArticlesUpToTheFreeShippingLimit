@@ -4,6 +4,7 @@
 namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit\Services;
 
 
+use Doctrine\ORM\NonUniqueResultException;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\CombineContion;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\MaxOverhangCondition;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\NotInArticleIdsCondition;
@@ -14,6 +15,7 @@ use Shopware\Bundle\SearchBundle\Condition\CombinedCondition;
 use Shopware\Bundle\SearchBundle\Condition\ManufacturerCondition;
 use Shopware\Bundle\SearchBundle\Condition\OrdernumberCondition;
 use Shopware\Bundle\SearchBundle\Condition\PriceCondition;
+use Shopware\Bundle\SearchBundle\Condition\ProductIdCondition;
 use Shopware\Bundle\SearchBundle\Condition\SimilarProductCondition;
 use Shopware\Bundle\SearchBundle\Sorting\PopularitySorting;
 use Shopware\Bundle\SearchBundle\Sorting\PriceSorting;
@@ -27,8 +29,6 @@ use Shopware\Components\Compatibility\LegacyStructConverter;
 use Shopware\Components\Model\ModelManager;
 use Shopware\Components\ProductStream\CriteriaFactory;
 use Shopware\Components\ProductStream\RepositoryInterface;
-use Shopware\Models\Article\Article;
-use Shopware\Models\Article\Detail;
 use Shopware\Models\Category\Category;
 use Shopware\Models\ProductStream\ProductStream;
 use Shopware_Components_Config;
@@ -101,18 +101,16 @@ class FillingArticleRepository
         $fillingArticles,
         $pluginInfos, 
         $articlesInBasketIds,
-        $sShippingcostsDifference,
-        $sBasket
+        $sShippingcostsDifference
     ){
         if (empty($pluginInfos['topSeller']))
             return $fillingArticles;
 
         //********* set condition criteria ****************************************************************************/
         $return = $this->createContextAndConditionCriteria(
-            $articlesInBasketIds,
             $pluginInfos,
-            $sShippingcostsDifference,
-            $sBasket
+            $articlesInBasketIds,
+            $sShippingcostsDifference
         );
         
         if (empty($return))
@@ -129,26 +127,80 @@ class FillingArticleRepository
 
         $criteria->setFetchCount(false);
 
-        //********* return top seller *********************************************************************************/
-        $variantSearch = $this->variantSearch;
-        $searchQuery = $variantSearch->search($criteria,$return['context']);
-
-        if (empty($searchQuery))
-            return $fillingArticles;
-
-        $products = $searchQuery->getProducts();
-        if (empty($products))
-            return $fillingArticles;
-
-        // convert product model to frontend product array
-        $topSeller = $this->legacyStructConverter->convertListProductStructList($products);
-
-        if (empty($topSeller))
-            return $fillingArticles;
-
-        return $topSeller;
+        return $this->getProductFromVariantSearch($criteria,$return['context'],$fillingArticles);
     }
 
+
+    public function getSimilarProducts(
+        $fillingArticles,
+        $pluginInfos,
+        $articlesInBasketIds,
+        $sShippingcostsDifference
+    ) {
+        if (empty($pluginInfos['similarArticles']))
+            return $fillingArticles;
+
+        //********* set condition criteria ****************************************************************************/
+        $return = $this->createContextAndConditionCriteria(
+            $pluginInfos,
+            $articlesInBasketIds,
+            $sShippingcostsDifference
+        );
+        if (empty($return))
+            return $fillingArticles;
+
+        $criteria = $return['criteria'];
+
+        foreach ($articlesInBasketIds as $articlesInBasketId) {
+            $criteria->addCondition(new SimilarProductCondition($articlesInBasketId,null));
+        }
+
+        return $this->getProductFromVariantSearch($criteria,$return['context'],$fillingArticles);
+    }
+
+    public function getFillingArticlesFromAccessories(
+        $fillingArticles,
+        $pluginInfos,
+        $articlesInBasketIds,
+        $sShippingcostsDifference
+    )
+    {
+        if (empty($pluginInfos['accessories']))
+            return $fillingArticles;
+
+        $articlesInBasketIdsString = implode(',',$articlesInBasketIds);
+        // default query
+        $sql = "
+        SELECT relationships.relatedarticle
+        FROM
+            s_articles_relationships relationships
+        LEFT JOIN 
+            s_articles articles ON articles.id = relationships.articleID
+        WHERE relationships.relatedarticle NOT IN ('$articlesInBasketIdsString')
+        AND relationships.articleID IN ('$articlesInBasketIdsString')
+        ";
+
+        $relatedarticleIdsAssoc = $this->modelManager->getConnection()->fetchAll($sql);
+        $relatedarticleIdsArray = [];
+        foreach ($relatedarticleIdsAssoc as $relatedarticleId) {
+            $relatedarticleIdsArray[] = $relatedarticleId['relatedarticle'];
+        }
+
+        //********* set condition criteria ****************************************************************************/
+        $return = $this->createContextAndConditionCriteria(
+            $pluginInfos,
+            $articlesInBasketIds,
+            $sShippingcostsDifference
+        );
+        if (empty($return))
+            return $fillingArticles;
+
+        $criteria = $return['criteria'];
+
+        $criteria->addCondition(new ProductIdCondition($relatedarticleIdsArray));
+
+        return $this->getProductFromVariantSearch($criteria,$return['context'],$fillingArticles);
+    }
     /**
      * Returns the fill articles according to the product streams.
      * @param $fillingArticles
@@ -157,63 +209,62 @@ class FillingArticleRepository
      * @param $sShippingcostsDifference
      * @param $sBasket
      * @return array $fillingArticles
+     * @throws NonUniqueResultException
      */
     public function getFillingArticlesFromProductStreams(
         $fillingArticles,
         $pluginInfos,
         $articlesInBasketIds,
-        $sShippingcostsDifference,
-        $sBasket
+        $sShippingcostsDifference
     ){
         if (empty($pluginInfos['productStream']))
             return $fillingArticles;
 
         //********* set condition criteria ****************************************************************************/
         $return = $this->createContextAndConditionCriteria(
-            $pluginInfos,$articlesInBasketIds,$sShippingcostsDifference,$sBasket
+            $pluginInfos,$articlesInBasketIds,$sShippingcostsDifference
         );
         $criteria = $return['criteria'];
 
         //********* get product stream model by name from plugin config ***************************************************/
         /** @var ProductStream[] $productSteams */
         $qb = $this->modelManager->createQueryBuilder();
-        $productSteams = $qb
+        $productSteam = $qb
             ->select('productStream')
             ->from(ProductStream::class,'productStream')
             ->where('productStream.name IN (:productStreamsIds)')
             ->setParameter('productStreamsIds',$pluginInfos['productStream'])
+            ->setMaxResults(1)
             ->getQuery()
-            ->getResult();
+            ->getOneOrNullResult();
 
             //********* get filling articles from product streams *****************************************************/
-        if (!empty($productSteams)) {
+        if (!empty($productSteam)) {
 
             $fillingArticles = [];
-            foreach ($productSteams as $productSteam) {
 
-                $this->repositoryInterface->prepareCriteria($criteria, $productSteam->getId());
-                $variantSearch = $this->variantSearch;
-                $searchQuery = $variantSearch->search($criteria,$return['context']);
-                if (empty($searchQuery))
-                    continue;
+            $this->repositoryInterface->prepareCriteria($criteria, $productSteam->getId());
+            $variantSearch = $this->variantSearch;
+            $searchQuery = $variantSearch->search($criteria,$return['context']);
+            if (empty($searchQuery))
+                return $fillingArticles;
 
-                $products = $searchQuery->getProducts();
-                if (empty($products))
-                    continue;
+            $products = $searchQuery->getProducts();
+            if (empty($products))
+                return $fillingArticles;
 
-                // convert product model to frontend product array
-                $articleFromProductStream = $this->legacyStructConverter->convertListProductStructList($products);
-                if (empty($articleFromProductStream))
-                    continue;
+            // convert product model to frontend product array
+            $articleFromProductStream = $this->legacyStructConverter->convertListProductStructList($products);
+            if (empty($articleFromProductStream))
+                return $fillingArticles;
 
-                $fillingArticles = array_merge($fillingArticles,$articleFromProductStream);
-            }
+            $fillingArticles = array_merge($fillingArticles,$articleFromProductStream);
         }
 
         return $fillingArticles;
     }
 
-    public function getQueryForCategoryManufacture(
+    public function getFillingArticlesFromCategoryManufacture(
         $fillingArticles,
         $articlesInBasketIds,
         $pluginInfos,
@@ -226,58 +277,48 @@ class FillingArticleRepository
 
         //********* set condition criteria ****************************************************************************/
         $return = $this->createContextAndConditionCriteria(
-            $articlesInBasketIds,
             $pluginInfos,
-            $sShippingcostsDifference,
-            $sBasket
+            $articlesInBasketIds,
+            $sShippingcostsDifference
         );
+
         if (empty($return))
             return $fillingArticles;
 
-        //********* return top seller *********************************************************************************/
-        $variantSearch = $this->variantSearch;
-        $searchQuery = $variantSearch->search($return['criteria'],$return['context']);
+        $criteria = $return['criteria'];
 
-        if (empty($searchQuery))
-            return $fillingArticles;
+        //********* categories and suppliers condition ****************************************************************/
+        $idFromAssign = $this->idFromAssign;
+        switch ($pluginInfos['consider']) {
+            case 'category':
+                $criteria->addCondition(new CategoryCondition($this->getCategoryIdsFromArticleIds($articlesInBasketIds)));
+                break;
+            case 'supplier':
+                $criteria->addCondition(new ManufacturerCondition($idFromAssign->getSupplierIdsFromBasket($sBasket)));
+                break;
+            case 'categoryAndSupplier':
+                $criteria->addCondition(new CombinedCondition([
+                    new CategoryCondition($this->getCategoryIdsFromArticleIds($articlesInBasketIds)),
+                    new ManufacturerCondition($idFromAssign->getSupplierIdsFromBasket($sBasket))
+                ]));
+                break;
+            case 'categoryOrSupplier':
+                $criteria->addCondition(new SeparatelyCondition([
+                    'categoryIDs' => $this->getCategoryIdsFromArticleIds($articlesInBasketIds),
+                    'supplierIDs' => $idFromAssign->getSupplierIdsFromBasket($sBasket)
+                ]));
+                break;
+            default:
+                break;
+        }
 
-        $products = $searchQuery->getProducts();
-        if (empty($products))
-            return $fillingArticles;
-
-        // convert product model to frontend product array
-        $products = $this->legacyStructConverter->convertListProductStructList($products);
-
-        if (empty($products))
-            return $fillingArticles;
-
-        return $products;
-    }
-
-    public function getOrdernumberAndFrontendArticle(Article $article)
-    {
-        /** @var Detail $details */
-        $detail = $article->getMainDetail();
-        $ordernumber = $detail->getNumber();
-
-        if (empty($ordernumber))
-            return null;
-
-        return [
-            'ordernumber' => $ordernumber,
-            'articleForFrontend' => Shopware()
-                ->Modules()
-                ->Articles()
-                ->sGetArticleById($article->getId(),$ordernumber)
-        ];
-
+        return $this->getProductFromVariantSearch($criteria,$return['context'],$fillingArticles);
     }
 
     public function createContextAndConditionCriteria(
-        $articlesInBasketIds,
         $pluginInfos,
-        $sShippingcostsDifference,
-        $sBasket
+        $articlesInBasketIds,
+        $sShippingcostsDifference
     ){
         //********* get default criteria ******************************************************************************/
         $contextService = $this->contextService;
@@ -319,45 +360,13 @@ class FillingArticleRepository
             ]));
         }
 
-        //********* categories and suppliers condition ****************************************************************/
-        $idFromAssign = $this->idFromAssign;
-        switch ($pluginInfos['consider']) {
-            case 'category':
-                $criteria->addCondition(new CategoryCondition($this->getCategoryIdsFromArticleIds($articlesInBasketIds)));
-                break;
-            case 'supplier':
-                $criteria->addCondition(new ManufacturerCondition($idFromAssign->getSupplierIdsFromBasket($sBasket)));
-                break;
-            case 'categoryAndSupplier':
-                $criteria->addCondition(new CombinedCondition([
-                    new CategoryCondition($this->getCategoryIdsFromArticleIds($articlesInBasketIds)),
-                    new ManufacturerCondition($idFromAssign->getSupplierIdsFromBasket($sBasket))
-                ]));
-                break;
-            case 'categoryOrSupplier':
-                $criteria->addCondition(new SeparatelyCondition([
-                    'categoryIDs' => $this->getCategoryIdsFromArticleIds($articlesInBasketIds),
-                    'supplierIDs' => $idFromAssign->getSupplierIdsFromBasket($sBasket)
-                    ]));
-                break;
-            default:
-                break;
-        }
-
-        //********* similar articles conditions ************************************************************************/
-        if (!empty($pluginInfos['similarArticles'])) {
-            foreach ($articlesInBasketIds as $articlesInBasketId) {
-                $criteria->addCondition(new SimilarProductCondition($articlesInBasketId,null));
-            }
-        }
-
         return [
             'criteria' => $criteria,
             'context' => $context
         ];
     }
 
-    private function getCategoryIdsFromArticleIds($articleIDs)
+    public function getCategoryIdsFromArticleIds($articleIDs)
     {
         $qb = $this->modelManager->createQueryBuilder();
         $qb->select('category.id')
@@ -457,4 +466,25 @@ class FillingArticleRepository
 
     }
 
+    private function getProductFromVariantSearch($criteria,$context,$fillingArticles) {
+
+        //********* return top seller *********************************************************************************/
+        $variantSearch = $this->variantSearch;
+        $searchQuery = $variantSearch->search($criteria,$context);
+
+        if (empty($searchQuery))
+            return $fillingArticles;
+
+        $products = $searchQuery->getProducts();
+        if (empty($products))
+            return $fillingArticles;
+
+        // convert product model to frontend product array
+        $productsStructs = $this->legacyStructConverter->convertListProductStructList($products);
+
+        if (empty($productsStructs))
+            return $fillingArticles;
+
+        return $productsStructs;
+    }
 }

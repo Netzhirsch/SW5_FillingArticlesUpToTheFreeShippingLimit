@@ -2,6 +2,8 @@
 
 namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit\Services;
 
+use Doctrine\ORM\NonUniqueResultException;
+
 class FillingArticleGetter
 {
     /**
@@ -20,7 +22,17 @@ class FillingArticleGetter
         $this->idFromAssign = $idFromAssign;
     }
 
+    /**
+     * @param $sBasket
+     * @param $pluginInfos
+     * @param $sShippingcostsDifference
+     * @return array
+     * @throws NonUniqueResultException
+     */
     public function getFillingArticles($sBasket,$pluginInfos,$sShippingcostsDifference) {
+
+        if (empty($sBasket))
+            return [];
 
         $articlesInBasketIds = $this->idFromAssign->getArticleIdsFromBasket($sBasket);
         //********* exlude articles by plugin setting *****************************************************************/
@@ -32,34 +44,60 @@ class FillingArticleGetter
         $fillingArticleRepository = $this->fillingArticleRepository;
         $fillingArticles = [];
 
-        $fillingArticles = array_merge($fillingArticles,$fillingArticleRepository->getFillingArticlesFromTopseller(
+        $articlesFromAccessories = $fillingArticleRepository->getFillingArticlesFromAccessories(
             $fillingArticles,
             $pluginInfos,
             $articlesInBasketIds,
-            $sShippingcostsDifference,
-            $sBasket
-        ));
+            $sShippingcostsDifference
+        );
 
-        $fillingArticles
-            = array_merge($fillingArticles,$fillingArticleRepository->getFillingArticlesFromProductStreams(
+        if (!empty($articlesFromAccessories))
+            $fillingArticles = array_merge($fillingArticles,$articlesFromAccessories);
+
+        $articlesFromSimilarProducts = $fillingArticleRepository->getSimilarProducts(
             $fillingArticles,
             $pluginInfos,
             $articlesInBasketIds,
-            $sShippingcostsDifference,
-            $sBasket
-        ));
+            $sShippingcostsDifference
+        );
+
+        if (!empty($articlesFromSimilarProducts))
+            $fillingArticles = array_merge($fillingArticles,$articlesFromSimilarProducts);
+
+        $articlesFromTopSeller = $fillingArticleRepository->getFillingArticlesFromTopseller(
+            $fillingArticles,
+            $pluginInfos,
+            $articlesInBasketIds,
+            $sShippingcostsDifference
+        );
+
+        if (!empty($articlesFromTopSeller))
+            $fillingArticles = array_merge($fillingArticles,$articlesFromTopSeller);
+
+        $articlesFromProductStream = $fillingArticleRepository->getFillingArticlesFromProductStreams(
+            $fillingArticles,
+            $pluginInfos,
+            $articlesInBasketIds,
+            $sShippingcostsDifference
+        );
+
+        if (!empty($articlesFromProductStream))
+            $fillingArticles = array_merge($fillingArticles,$articlesFromProductStream);
 
 
         //********* get article collection ****************************************************************************/
-        $fillingArticles
-            = array_merge($fillingArticles,$fillingArticleRepository->getQueryForCategoryManufacture(
-                $fillingArticles,
-                $articlesInBasketIds,
-                $pluginInfos,
-                $sShippingcostsDifference,
-                $sBasket
-        ));
+        $articlesFromCategoryManufacture = $fillingArticleRepository->getFillingArticlesFromCategoryManufacture(
+            $fillingArticles,
+            $articlesInBasketIds,
+            $pluginInfos,
+            $sShippingcostsDifference,
+            $sBasket
+        );
+        if (!empty($articlesFromCategoryManufacture))
+            $fillingArticles
+                = array_merge($fillingArticles,$articlesFromCategoryManufacture);
 
+        $fillingArticles = array_slice($fillingArticles, 0, $pluginInfos['maxArticle']);
         //********* sorting ****************************************************************************************/
         $fillingArticles
             = $fillingArticleRepository->getSortedFillingArticle($fillingArticles,$pluginInfos);
