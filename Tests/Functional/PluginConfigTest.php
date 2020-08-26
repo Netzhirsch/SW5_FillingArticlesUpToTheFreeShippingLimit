@@ -46,7 +46,7 @@ class PluginConfigTest extends TestCase
             'consider',
             'customersAlsoBought',
             'similarArticles',
-            'crossSelling',
+            'accessories',
             'topSeller',
         ],null
         );
