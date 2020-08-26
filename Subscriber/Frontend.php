@@ -146,6 +146,7 @@ class Frontend implements SubscriberInterface
 
         if (!empty($fillingArticles)) {
             $view->assign(['displayVariants' => $pluginInfos['displayVariants']]);
+            $view->assign(['viewInAjaxBasket' => $pluginInfos['viewInAjaxBasket']]);
             $view->assign(['fillingArticles' => $fillingArticles]);
             $view->addTemplateDir($this->pluginDirectory . '/Resources/views');
         }
