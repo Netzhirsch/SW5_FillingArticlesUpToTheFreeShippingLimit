@@ -2,10 +2,7 @@
 
 {block name="frontend_common_product_slider_container"}
 
-    {if $displayVariants == 'popup' || $displayVariants == 'scroll out'}
-        {$netzhirschFillingArticlesUpToTheFreeShippingLimitHidden
-            = 'netzhirsch_filling_articles_up_to_the_free_shipping_limit--hidden' }
-    {/if}
+
 
     {$CartFreeShippingFillingArticleMessageSliderTitel
         = "{s name='CartFreeShippingFillingArticleMessageSliderTitel'}Füllartikel{/s}"}
@@ -15,18 +12,13 @@
                     panel--title
                     is--underline
                     product-slider--title
-                    {$netzhirschFillingArticlesUpToTheFreeShippingLimitHidden}
-                   "
-
+            "
             data-cart-free-shipping-filling-article-message-slider-titel=
                 "{$CartFreeShippingFillingArticleMessageSliderTitel}"
     >
         {$CartFreeShippingFillingArticleMessageSliderTitel}
     </div>
-    <div
-            id="fillingArticles"
-            class="product-slider--container {$netzhirschFillingArticlesUpToTheFreeShippingLimitHidden}"
-    >
+    <div class="product-slider--container">
 
         {include file="frontend/_includes/product_slider_items.tpl" fillingArticles=$fillingArticles}
 
