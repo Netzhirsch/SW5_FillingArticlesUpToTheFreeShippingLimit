@@ -5,7 +5,7 @@ namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit\Tests\Functional\Ser
 use Doctrine\ORM\NonUniqueResultException;
 use Enlight_Components_Test_Controller_TestCase;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Services\FillingArticleRepository;
-use Shopware\Bundle\StoreFrontBundle\Struct\ProductContextInterface;
+use Shopware\Bundle\SearchBundle\Criteria;
 use Shopware\Models\Article\Article;
 
 class FillingArticleRepositoryTest extends Enlight_Components_Test_Controller_TestCase
@@ -36,81 +36,87 @@ class FillingArticleRepositoryTest extends Enlight_Components_Test_Controller_Te
             ->getQuery()
             ->getResult();
 
-        $shippingcostsArray = [20,60];
+        //********* fill articel filter *******************************************************************************/
+        $shippingcosts = 30;
+        //********* one filter option *********************************************************************************/
+        $this->filterTest(
+            $shippingcosts, $articles, $fillingArticlesRepository, $pluginInfos,'topSeller'
+        );
+        $pluginInfos['topSeller'] = 0;
+        $pluginInfos['productStream'] = ['Kunden kauften auch'];
+        $this->filterTest(
+            $shippingcosts, $articles, $fillingArticlesRepository, $pluginInfos,'Kunden kauften auch'
+        );
 
-        foreach ($shippingcostsArray as $shippingcosts) {
+            //********* consider **************************************************************************************/
+        $pluginInfos['productStream'] = null;
+        $pluginInfos['consider'] = 'category';
+        $this->filterTest($shippingcosts, $articles, $fillingArticlesRepository, $pluginInfos,'category');
 
-            foreach ($articles as $article) {
+        $pluginInfos['consider'] = 'supplier';
+        $this->filterTest($shippingcosts, $articles, $fillingArticlesRepository, $pluginInfos,'category');
 
-                if ($article->getMainDetail()->getShippingFree()) {
-                    continue;
-                }
+        $pluginInfos['consider'] = 'categoryAndSupplier';
+        $this->filterTest(
+            $shippingcosts, $articles, $fillingArticlesRepository, $pluginInfos,'categoryAndSupplier'
+        );
 
-                $id = $article->getId();
-                $articlePrice = $article->getMainDetail()->getPrices()[0]->getPrice();
-                $articleTax = $article->getTax()->getTax();
+        $pluginInfos['consider'] = 'categoryOrSupplier';
+        $this->filterTest(
+            $shippingcosts, $articles, $fillingArticlesRepository, $pluginInfos,'categoryAndSupplier'
+        );
+        $pluginInfos['consider'] = null;
 
-                $sShippingcostsDifference =
-                    $shippingcosts - ($articlePrice + ($articlePrice / 100 * $articleTax));
 
-                if ($sShippingcostsDifference > 0) {
-                    $this->topSeller(
-                        $fillingArticlesRepository,
-                        $pluginInfos,
-                        $id,
-                        $sShippingcostsDifference
-                    );
-                    $fillingArticles = [];
-                    $this->productStreams(
-                        $fillingArticlesRepository,
-                        $fillingArticles,
-                        $pluginInfos,
-                        $id,
-                        $sShippingcostsDifference
-                    );
-                    $pluginInfos['consider'] = 'category';
-                    $fillingArticles = [];
-                    $this->categoryAndManufacture(
-                        $fillingArticlesRepository,
-                        $fillingArticles,
-                        $id,
-                        $pluginInfos,
-                        $sShippingcostsDifference,
-                        $article->getSupplier()->getId()
-                    );
-                    $fillingArticles = [];
-                    $pluginInfos['consider'] = 'categoryAndSupplier';
-                    $this->categoryAndManufacture(
-                        $fillingArticlesRepository,
-                        $fillingArticles,
-                        $id,
-                        $pluginInfos,
-                        $sShippingcostsDifference,
-                        $article->getSupplier()->getId()
-                    );
-                    $this->accessories(
-                        $fillingArticlesRepository,
-                        $fillingArticles,
-                        $id,
-                        $pluginInfos,
-                        $sShippingcostsDifference
-                    );
-                    $pluginInfos['accessories'] = 1;
-                    $this->accessories(
-                        $fillingArticlesRepository,
-                        $fillingArticles,
-                        $id,
-                        $pluginInfos,
-                        $sShippingcostsDifference
-                    );
-                }
-            }
-        }
+        $pluginInfos['customersAlsoBought'] = true;
+        $this->filterTest(
+            $shippingcosts, $articles, $fillingArticlesRepository, $pluginInfos,'customersAlsoBought'
+        );
+        $pluginInfos['customersAlsoBought'] = false;
+
+        $pluginInfos['accessories'] = true;
+        $this->filterTest(
+            $shippingcosts, $articles, $fillingArticlesRepository, $pluginInfos,'accessories'
+        );
+        $pluginInfos['accessories'] = false;
+
+        $pluginInfos['similarArticles'] = true;
+        $this->filterTest(
+            $shippingcosts, $articles, $fillingArticlesRepository, $pluginInfos,'similarArticles'
+        );
+        $pluginInfos['similarArticles'] = false;
+
+        //********* multi filter options ******************************************************************************/
+        $pluginInfos['productStream'] = ['Kunden kauften auch','abverkauf'];
+        $this->filterTest(
+            $shippingcosts,
+            $articles,
+            $fillingArticlesRepository,
+            $pluginInfos,
+            'Kunden kauften auch,abverkauf'
+        );
+
+        $pluginInfos['productStream'] = ['Kunden kauften auch'];
+        $pluginInfos['consider'] = 'category';
+        $this->filterTest(
+            $shippingcosts,
+            $articles,
+            $fillingArticlesRepository,
+            $pluginInfos,
+            'Kunden kauften auch,category'
+        );
+        $this->filterTest(
+            $shippingcosts,
+            $articles,
+            $fillingArticlesRepository,
+            $pluginInfos,
+            'abverkauf,category');
+        $pluginInfos['productStream'] = ['abverkauf'];
+        $pluginInfos['consider'] = 'category';
     }
 
     private function accessories(
         FillingArticleRepository $fillingArticlesRepository,
-        $fillingArticles,
         $id,
         $pluginInfos,
         $sShippingcostsDifference
@@ -123,19 +129,15 @@ class FillingArticleRepositoryTest extends Enlight_Components_Test_Controller_Te
             $sShippingcostsDifference
         );
 
-        if (!empty($fillingArticlesFromAccessories)) {
-            $fillingArticles = array_merge($fillingArticles,$fillingArticlesFromAccessories);
-        }
-
         if ($pluginInfos['accessories'] == 0) {
             $this->assertTrue(
                 empty($fillingArticlesFromAccessories),
                 'Zum Artikel: '
                 .$id.
-                ' werden keine Zugehör gefunden, obwohl in den Einstellungen nicht aktiv'
+                ' werden keine Zugehör gefunden, obwohl in den Einstellungen aktiv'
             );
         } else {
-            if ($id == 1 && $sShippingcostsDifference > 0.01)
+            if ($id == 1)
                 $this->assertCount(2,$fillingArticlesFromAccessories,$id);
             else
                 $this->assertCount(0,$fillingArticlesFromAccessories,$id);
@@ -148,7 +150,8 @@ class FillingArticleRepositoryTest extends Enlight_Components_Test_Controller_Te
         FillingArticleRepository $fillingArticlesRepository,
         $pluginInfos,
         $id,
-        $sShippingcostsDifference
+        $sShippingcostsDifference,
+        $filtername
     ) {
         $fillingArticles
             = $fillingArticlesRepository->getFillingArticlesFromTopSeller(
@@ -157,13 +160,33 @@ class FillingArticleRepositoryTest extends Enlight_Components_Test_Controller_Te
             [$id => $id],
             $sShippingcostsDifference
         );
-        $this->assertTrue(
-            !empty($fillingArticles),
-            'Zum Artikel: '
-            .$id.
-            ' werden keine TopSeller gefunden, die die VSKFG von '.
-            $sShippingcostsDifference.' erreichen.'
-        );
+        if ($sShippingcostsDifference > 0) {
+            if ($filtername == 'topSeller') {
+                $this->assertTrue(
+                    !empty($fillingArticles),
+                    'Zum Artikel: '
+                    .$id.
+                    ' werden keine TopSeller gefunden, die die VSKFG von '.
+                    $sShippingcostsDifference.' erreichen. Mit dem Filter'.$filtername
+                );
+            } else {
+                $this->assertTrue(
+                    empty($fillingArticles),
+                    'Zum Artikel: '
+                    .$id.
+                    ' werden TopSeller gefunden, die die VSKFG von '.
+                    $sShippingcostsDifference.' erreichen. Mit dem Filter'.$filtername
+                );
+            }
+        } else {
+            $this->assertTrue(
+                empty($fillingArticles),
+                'Zum Artikel: '
+                .$id.
+                ' werden TopSeller gefunden, obwohl die Differenz '.
+                $sShippingcostsDifference.' erreichen. Mit dem Filter'.$filtername
+            );
+        }
 
         return $fillingArticles;
     }
@@ -174,6 +197,7 @@ class FillingArticleRepositoryTest extends Enlight_Components_Test_Controller_Te
      * @param $pluginInfos
      * @param $id
      * @param $sShippingcostsDifference
+     * @param $filtername
      * @throws NonUniqueResultException
      */
     private function productStreams(
@@ -181,43 +205,68 @@ class FillingArticleRepositoryTest extends Enlight_Components_Test_Controller_Te
         $fillingArticles,
         $pluginInfos,
         $id,
-        $sShippingcostsDifference
+        $sShippingcostsDifference,
+        $filtername
     ) {
-        $fillingArticles
-            = $fillingArticlesRepository->getFillingArticlesFromProductStreams(
-            $fillingArticles,
-            $pluginInfos,
-            [$id => $id],
-            $sShippingcostsDifference
-        );
+        if ($pluginInfos['productStream'] != null) {
+            foreach ($pluginInfos['productStream'] as $productStream) {
 
-        $contextService = Shopware()->Container()->get('shopware_storefront.context_service');
-        /** @var ProductContextInterface $context */
-        $context = $contextService->getShopContext();
-        $criteria = Shopware()->Container()->get('shopware_product_stream.criteria_factory');
-        $criteria = $criteria->createCriteria(
-            Shopware()->Container()->get('request_stack')->getCurrentRequest(),
-            $context
-        );
-        $criteria->limit(20);
-        Shopware()->Container()->get('shopware_product_stream.repository')->prepareCriteria($criteria, 1);
-        $variantSearch = Shopware()->Container()->get('shopware_search.variant_search');
-        $searchQuery = $variantSearch->search($criteria, $context);
+                $fillingArticles
+                        = $fillingArticlesRepository->getFillingArticlesFromProductStreams(
+                        $fillingArticles,
+                        ['productStream' => $productStream],
+                        [$id => $id],
+                        $sShippingcostsDifference
+                    );
+                    $return = $fillingArticlesRepository->createContextAndConditionCriteria(
+                        $pluginInfos,[$id => $id],$sShippingcostsDifference
+                    );
+                    /** @var Criteria $criteria */
+                    $criteria = $return['criteria'];
 
-        $products = $searchQuery->getProducts();
-        foreach ($products as $product) {
-            foreach ($fillingArticles as $key => $fillingArticle) {
-                if ($fillingArticle['articleID'] == $product->getId()) {
-                    unset($fillingArticles[$key]);
-                }
+                    $productStreamId = 3;
+                    if ($productStream == 'abverkauf')
+                        $productStreamId = 1;
+                    Shopware()->Container()->get('shopware_product_stream.repository')
+                        ->prepareCriteria($criteria, $productStreamId);
+
+                    $variantSearch = Shopware()->Container()->get('shopware_search.variant_search');
+                    $searchQuery = $variantSearch->search($criteria, $return['context']);
+
+                    $products = $searchQuery->getProducts();
+
+                    $this->assertCount(
+                        count($products),
+                        $fillingArticles,
+                            'zu viele/wenige im Product Stream: expect: '
+                            .count($products).' actual: '
+                            .count($fillingArticles).
+                            ' Artikel im Warenkorb: '.$id.
+                            ' Product Stream: '.$productStream.
+                            ' Betrag zur VSKFG: '.$sShippingcostsDifference.
+                            ' Filtername: '.$filtername
+                    );
+
+                    foreach ($products as $product) {
+                        foreach ($fillingArticles as $key => $fillingArticle) {
+                            if ($fillingArticle['articleID'] == $product->getId()) {
+                                unset($fillingArticles[$key]);
+                            }
+                        }
+                    }
+                    $this->assertEmpty(
+                        $fillingArticles,
+                        'Die Artikel: '
+                        .implode(', ', array_keys($fillingArticles)).
+                        ' sind nicht im Product Streams.'
+                    );
             }
+        } else {
+            $this->assertEmpty(
+                $fillingArticles,
+                'Kein Product Stream ausgewählt aber Artikel gefunden'
+            );
         }
-        $this->assertEmpty(
-            $fillingArticles,
-            'Die Artikel: '
-            .implode(', ', array_keys($fillingArticles)).
-            ' sind nicht im Product Streams.'
-        );
     }
 
     private function categoryAndManufacture(
@@ -263,17 +312,24 @@ class FillingArticleRepositoryTest extends Enlight_Components_Test_Controller_Te
                         }
                     }
                 }
-                $this->assertTrue(
-                    $isInCategory,
-                    'KategorieId im Warenkorb:'
-                    .$categoryBasketArticle.' Kategorie im Füllartikel:'.$categoryFillingArticle
-                );
-                if ($pluginInfos['consider'] == 'categoryAndSupplier') {
+                if ($pluginInfos['consider'] == 'categoryAndSupplier' || $pluginInfos['consider'] == 'category') {
+                    $this->assertTrue(
+                        $isInCategory,
+                        'KategorieId im Warenkorb:'
+                        .$categoryBasketArticle.' Kategorie im Füllartikel:'.$categoryFillingArticle
+                    );
+                } elseif ($pluginInfos['consider'] == 'categoryAndSupplier' || $pluginInfos['consider'] == 'supplier') {
                     $this->assertTrue(
                         $manufacture != $fillingArticle['supplier'],
                         'Hersteller im Warenkorb:'
                         .$categoryBasketArticle.' Hersteller im Füllartikel:'.$categoryFillingArticle
                     );
+                } elseif ($pluginInfos['consider'] == 'categoryOrSupplier') {
+                    if ($manufacture != $fillingArticle['supplier']) {
+                        $this->assertTrue($isInCategory);
+                    } else {
+                        $this->assertFalse($isInCategory);
+                    }
                 }
             }
         }
@@ -304,5 +360,152 @@ class FillingArticleRepositoryTest extends Enlight_Components_Test_Controller_Te
             'accessories' => 0,
             'topSeller' => 1,
         ];
+    }
+
+    /**
+     * @param float $shippingcosts
+     * @param array $articles
+     * @param FillingArticleRepository $fillingArticlesRepository
+     * @param array $pluginInfos
+     * @param string $filtername
+     * @throws NonUniqueResultException
+     */
+    public function filterTest(
+        float $shippingcosts,
+        array $articles,
+        FillingArticleRepository $fillingArticlesRepository,
+        array $pluginInfos,
+        string $filtername
+    ): void {
+        foreach ($articles as $article) {
+
+            if ($article->getMainDetail()->getShippingFree()) {
+                continue;
+            }
+
+            $id = $article->getId();
+            $articlePrice = round($article->getMainDetail()->getPrices()[0]->getPrice(),2);
+            $articleTax = (int)$article->getTax()->getTax();
+            $percent = $articlePrice / 100;
+            $percent *= $articleTax;
+            $articlePrice += $percent;
+            $articlePrice = round($articlePrice,2);
+            $sShippingcostsDifference = $shippingcosts - $articlePrice;
+
+            if ($sShippingcostsDifference > 0) {
+                $this->topSeller(
+                    $fillingArticlesRepository,
+                    $pluginInfos,
+                    $id,
+                    $sShippingcostsDifference,
+                    $filtername
+                );
+                $fillingArticles = [];
+                $this->productStreams(
+                    $fillingArticlesRepository,
+                    $fillingArticles,
+                    $pluginInfos,
+                    $id,
+                    $sShippingcostsDifference,
+                    $filtername
+                );
+                $fillingArticles = [];
+                $this->categoryAndManufacture(
+                    $fillingArticlesRepository,
+                    $fillingArticles,
+                    $id,
+                    $pluginInfos,
+                    $sShippingcostsDifference,
+                    $article->getSupplier()->getId()
+                );
+                $fillingArticles = [];
+                $this->alsoBought(
+                    $fillingArticlesRepository,
+                    $fillingArticles,
+                    $id,
+                    $pluginInfos,
+                    $sShippingcostsDifference
+                );
+                $this->accessories(
+                    $fillingArticlesRepository,
+                    $id,
+                    $pluginInfos,
+                    $sShippingcostsDifference
+                );
+                $this->similarArticles(
+                    $fillingArticlesRepository,
+                    $fillingArticles,
+                    $id,
+                    $pluginInfos,
+                    $sShippingcostsDifference,
+                    $shippingcosts
+                );
+            }
+        }
+    }
+
+    private function alsoBought(
+        FillingArticleRepository $fillingArticlesRepository,
+        array $fillingArticles,
+        $id,
+        array $pluginInfos,
+        float $sShippingcostsDifference
+    ) {
+        if (!$pluginInfos['customersAlsoBought'])
+            return;
+
+        $fillingArticles = $fillingArticlesRepository->getFillingArticlesFromAlsoBought(
+            $fillingArticles,
+            $pluginInfos,
+            [$id => $id],
+            $sShippingcostsDifference
+        );
+
+        if ($id == 5) {
+            $this->assertCount(1,$fillingArticles,$id);
+        } else {
+            $this->assertCount(0,$fillingArticles,$id);
+        }
+    }
+
+    private function similarArticles(
+        FillingArticleRepository $fillingArticlesRepository,
+        array $fillingArticles,
+        $id,
+        array $pluginInfos,
+        float $sShippingcostsDifference,
+        $shippingcosts
+    ) {
+
+        $fillingArticles = $fillingArticlesRepository->getFillingArticlesFromSimilar(
+            $fillingArticles,
+            $pluginInfos,
+            [$id => $id],
+            $sShippingcostsDifference
+        );
+
+        if (!$pluginInfos['similarArticles']) {
+            $this->assertTrue(
+                empty($fillingArticlesFromAccessories),
+                'Zum Artikel: '
+                .$id.
+                ' werden ähnliche Artikel gefunden, obwohl in den Einstellungen nicht aktiv.'
+            );
+            return;
+        }
+
+        $idsWithSimilar = [
+          5,
+          7,
+          11,
+          12
+        ];
+        if ($shippingcosts == 30) {
+            if (in_array($id,$idsWithSimilar)) {
+                $this->assertCount(1,$fillingArticles,$id);
+            } else {
+                $this->assertCount(0,$fillingArticles,$id);
+            }
+        }
     }
 }
