@@ -4,7 +4,8 @@
 namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit\Services;
 
 
-use Doctrine\ORM\NonUniqueResultException;
+use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Driver\ResultStatement;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\CombineContion;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\MaxOverhangCondition;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\NotInArticleIdsCondition;
@@ -16,7 +17,6 @@ use Shopware\Bundle\SearchBundle\Condition\ManufacturerCondition;
 use Shopware\Bundle\SearchBundle\Condition\OrdernumberCondition;
 use Shopware\Bundle\SearchBundle\Condition\PriceCondition;
 use Shopware\Bundle\SearchBundle\Condition\ProductIdCondition;
-use Shopware\Bundle\SearchBundle\Condition\SimilarProductCondition;
 use Shopware\Bundle\SearchBundle\Sorting\PopularitySorting;
 use Shopware\Bundle\SearchBundle\Sorting\PriceSorting;
 use Shopware\Bundle\SearchBundle\Sorting\ProductStockSorting;
@@ -131,7 +131,7 @@ class FillingArticleRepository
     }
 
 
-    public function getSimilarProducts(
+    public function getFillingArticlesFromSimilar(
         $fillingArticles,
         $pluginInfos,
         $articlesInBasketIds,
@@ -139,6 +139,61 @@ class FillingArticleRepository
     ) {
         if (empty($pluginInfos['similarArticles']))
             return $fillingArticles;
+
+        $query = $this->modelManager->getDBALQueryBuilder();
+        $query->select('similar.relatedarticle')
+            ->from('s_articles_similar', 'similar')
+            ->innerJoin('similar', 's_articles', 'product', 'product.id = similar.articleID')
+            ->innerJoin('similar', 's_articles', 'similarArticles', 'similarArticles.id = similar.relatedArticle')
+            ->innerJoin('similarArticles', 's_articles_details', 'similarVariant', 'similarVariant.id = similarArticles.main_detail_id')
+            ->where('product.id IN (:ids)')
+            ->setParameter(':ids', $articlesInBasketIds, Connection::PARAM_INT_ARRAY);
+
+        /** @var ResultStatement $statement */
+        $statement = $query->execute();
+
+        $similarIds = $statement->fetch();
+        //********* set condition criteria ****************************************************************************/
+        $return = $this->createContextAndConditionCriteria(
+            $pluginInfos,
+            $articlesInBasketIds,
+            $sShippingcostsDifference
+        );
+        if (empty($return))
+            return $fillingArticles;
+
+        $criteria = $return['criteria'];
+
+        $ids = [];
+        foreach ($similarIds as $similarId) {
+            $ids[] = $similarId['relatedarticle'];
+        }
+
+        $criteria->addCondition(new ProductIdCondition($ids));
+
+        return $this->getProductFromVariantSearch($criteria,$return['context'],$fillingArticles);
+    }
+
+    public function getFillingArticlesFromAlsoBought(
+        $fillingArticles,
+        $pluginInfos,
+        $articlesInBasketIds,
+        $sShippingcostsDifference
+    )
+    {
+        if (empty($pluginInfos['customersAlsoBought']))
+            return $fillingArticles;
+
+        $alsoBoughtArticleIdsArray = [];
+        $marketing = Shopware()->Modules()->Marketing();
+        foreach ($articlesInBasketIds as $articlesInBasketId) {
+            $categoryID = Shopware()->Modules()->Categories()->sGetCategoryIdByArticleId($articlesInBasketId);
+            $marketing->categoryId = $categoryID ;
+            $articlesFromAlsoBought = $marketing->sGetAlsoBoughtArticles($articlesInBasketId);
+            foreach ($articlesFromAlsoBought as $articleFromAlsoBought) {
+                $alsoBoughtArticleIdsArray[] = $articleFromAlsoBought['id'];
+            }
+        }
 
         //********* set condition criteria ****************************************************************************/
         $return = $this->createContextAndConditionCriteria(
@@ -151,13 +206,10 @@ class FillingArticleRepository
 
         $criteria = $return['criteria'];
 
-        foreach ($articlesInBasketIds as $articlesInBasketId) {
-            $criteria->addCondition(new SimilarProductCondition($articlesInBasketId,null));
-        }
+        $criteria->addCondition(new ProductIdCondition($alsoBoughtArticleIdsArray));
 
         return $this->getProductFromVariantSearch($criteria,$return['context'],$fillingArticles);
     }
-
     public function getFillingArticlesFromAccessories(
         $fillingArticles,
         $pluginInfos,
@@ -201,15 +253,14 @@ class FillingArticleRepository
 
         return $this->getProductFromVariantSearch($criteria,$return['context'],$fillingArticles);
     }
+
     /**
      * Returns the fill articles according to the product streams.
      * @param $fillingArticles
-     * @param array $pluginInfos
+     * @param $pluginInfos
      * @param $articlesInBasketIds
      * @param $sShippingcostsDifference
-     * @param $sBasket
      * @return array $fillingArticles
-     * @throws NonUniqueResultException
      */
     public function getFillingArticlesFromProductStreams(
         $fillingArticles,
@@ -220,45 +271,48 @@ class FillingArticleRepository
         if (empty($pluginInfos['productStream']))
             return $fillingArticles;
 
-        //********* set condition criteria ****************************************************************************/
-        $return = $this->createContextAndConditionCriteria(
-            $pluginInfos,$articlesInBasketIds,$sShippingcostsDifference
-        );
-        $criteria = $return['criteria'];
+
 
         //********* get product stream model by name from plugin config ***************************************************/
         /** @var ProductStream[] $productSteams */
         $qb = $this->modelManager->createQueryBuilder();
-        $productSteam = $qb
+        $productSteams = $qb
             ->select('productStream')
             ->from(ProductStream::class,'productStream')
             ->where('productStream.name IN (:productStreamsIds)')
             ->setParameter('productStreamsIds',$pluginInfos['productStream'])
-            ->setMaxResults(1)
             ->getQuery()
-            ->getOneOrNullResult();
+            ->getResult();
 
             //********* get filling articles from product streams *****************************************************/
-        if (!empty($productSteam)) {
+        if (!empty($productSteams)) {
 
             $fillingArticles = [];
+            foreach ($productSteams as $productSteam) {
 
-            $this->repositoryInterface->prepareCriteria($criteria, $productSteam->getId());
-            $variantSearch = $this->variantSearch;
-            $searchQuery = $variantSearch->search($criteria,$return['context']);
-            if (empty($searchQuery))
-                return $fillingArticles;
+                //********* to reset we need to do this every product stream ******************************************/
+                $return = $this->createContextAndConditionCriteria(
+                    $pluginInfos,$articlesInBasketIds,$sShippingcostsDifference
+                );
+                $criteria = $return['criteria'];
 
-            $products = $searchQuery->getProducts();
-            if (empty($products))
-                return $fillingArticles;
+                $this->repositoryInterface->prepareCriteria($criteria, $productSteam->getId());
+                $variantSearch = $this->variantSearch;
+                $searchQuery = $variantSearch->search($criteria,$return['context']);
+                if (empty($searchQuery))
+                    return $fillingArticles;
 
-            // convert product model to frontend product array
-            $articleFromProductStream = $this->legacyStructConverter->convertListProductStructList($products);
-            if (empty($articleFromProductStream))
-                return $fillingArticles;
+                $products = $searchQuery->getProducts();
+                if (empty($products))
+                    return $fillingArticles;
 
-            $fillingArticles = array_merge($fillingArticles,$articleFromProductStream);
+                // convert product model to frontend product array
+                $articleFromProductStream = $this->legacyStructConverter->convertListProductStructList($products);
+                if (empty($articleFromProductStream))
+                    return $fillingArticles;
+
+                $fillingArticles = array_merge($fillingArticles,$articleFromProductStream);
+            }
         }
 
         return $fillingArticles;
@@ -389,7 +443,7 @@ class FillingArticleRepository
      * @var array $fillingArticles
      * @return array
      */
-    public function getSortedFillingArticle($fillingArticles, $pluginInfos)
+    public function getSortedFillingArticle(array $fillingArticles, array $pluginInfos)
     {
         //********* prepare search ************************************************************************************/
         $contextService = $this->contextService;

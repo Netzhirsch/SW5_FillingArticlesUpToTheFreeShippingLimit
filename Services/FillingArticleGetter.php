@@ -2,8 +2,6 @@
 
 namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit\Services;
 
-use Doctrine\ORM\NonUniqueResultException;
-
 class FillingArticleGetter
 {
     /**
@@ -27,7 +25,6 @@ class FillingArticleGetter
      * @param $pluginInfos
      * @param $sShippingcostsDifference
      * @return array
-     * @throws NonUniqueResultException
      */
     public function getFillingArticles($sBasket,$pluginInfos,$sShippingcostsDifference) {
 
@@ -54,7 +51,7 @@ class FillingArticleGetter
         if (!empty($articlesFromAccessories))
             $fillingArticles = array_merge($fillingArticles,$articlesFromAccessories);
 
-        $articlesFromSimilarProducts = $fillingArticleRepository->getSimilarProducts(
+        $articlesFromSimilarProducts = $fillingArticleRepository->getFillingArticlesFromSimilar(
             $fillingArticles,
             $pluginInfos,
             $articlesInBasketIds,
@@ -84,6 +81,15 @@ class FillingArticleGetter
         if (!empty($articlesFromProductStream))
             $fillingArticles = array_merge($fillingArticles,$articlesFromProductStream);
 
+        $articlesFromAlsoBought = $fillingArticleRepository->getFillingArticlesFromAlsoBought(
+            $fillingArticles,
+            $pluginInfos,
+            $articlesInBasketIds,
+            $sShippingcostsDifference
+        );
+
+        if (!empty($articlesFromAlsoBought))
+            $fillingArticles = array_merge($fillingArticles,$articlesFromAlsoBought);
 
         //********* get article collection ****************************************************************************/
         $articlesFromCategoryManufacture = $fillingArticleRepository->getFillingArticlesFromCategoryManufacture(
