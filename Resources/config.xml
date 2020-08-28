@@ -131,6 +131,50 @@
                 <minValue>0</minValue>
             </options>
         </element>
+        <element scope="shop" type="select">
+            <name>excludedArticles</name>
+            <label>exclude articles</label>
+            <label lang="de">Artikel ausschließen</label>
+            <description lang="de">Diese Artikel werden nicht Füllartikel berücksichtigt.</description>
+            <description>These articles are not considered filling articles.</description>
+            <store>Shopware.apps.Base.store.Article</store>
+            <options>
+                <multiSelect>true</multiSelect>
+            </options>
+        </element>
+        <element scope="shop" type="select">
+            <name>variantsGroup</name>
+            <label>exclude variant groups</label>
+            <label lang="de">Varianten-Gruppen ausschließen</label>
+            <description lang="de">Wählen Sie z.B. Größe um zu verhindert, dass Füllartikel der Größe S vorgeschlagen werden, wenn im Warenkorb Artikel der Größe XL liegen.</description>
+            <description>Choose e.g. size to avoid that filling articles of size S are suggested if the shopping cart contains articles of size XL.</description>
+            <store>
+                <![CDATA[Ext.define('Me.Netzhirsch.Form', {
+                extend: 'Ext.data.Store',
+                fields: [
+                    { name:'id', type: 'int' },
+                    { name:'name', type: 'string' }
+                ],
+                autoLoad: true,
+                pageSize: 25,
+                proxy: {
+                    type: 'ajax',
+                    url: window.location.href.substr(0
+                        , window.location.href.indexOf('backend')) + 'backend/PluginConfig/getVariantGroups',
+                    reader: {
+                        type: 'json',
+                        root: 'data',
+                        totalProperty: 'total'
+                    }
+                }
+                }).create();//new ]]>
+            </store>
+            <options>
+                <multiSelect>true</multiSelect>
+                <valueField>id</valueField>
+                <displayField>name</displayField>
+            </options>
+        </element>
         <element scope="shop" type="combo">
             <name>sorting</name>
             <label lang="de">Sortierung von den Füllartikel</label>
@@ -178,50 +222,6 @@
                     <label lang="de">Beliebtheit absteigend</label>
                 </option>
             </store>
-        </element>
-        <element scope="shop" type="select">
-            <name>excludedArticles</name>
-            <label>exclude articles</label>
-            <label lang="de">Artikel ausschließen</label>
-            <description lang="de">Diese Artikel werden nicht Füllartikel berücksichtigt.</description>
-            <description>These articles are not considered filling articles.</description>
-            <store>Shopware.apps.Base.store.Article</store>
-            <options>
-                <multiSelect>true</multiSelect>
-            </options>
-        </element>
-        <element scope="shop" type="select">
-            <name>variantsGroup</name>
-            <label>exclude variant groups</label>
-            <label lang="de">Varianten-Gruppen ausschließen</label>
-            <description lang="de">Wählen Sie z.B. Größe um zu verhindert, dass Füllartikel der Größe S vorgeschlagen werden, wenn im Warenkorb Artikel der Größe XL liegen.</description>
-            <description>Choose e.g. size to avoid that filling articles of size S are suggested if the shopping cart contains articles of size XL.</description>
-            <store>
-                <![CDATA[Ext.define('Me.Netzhirsch.Form', {
-                extend: 'Ext.data.Store',
-                fields: [
-                    { name:'id', type: 'int' },
-                    { name:'name', type: 'string' }
-                ],
-                autoLoad: true,
-                pageSize: 25,
-                proxy: {
-                    type: 'ajax',
-                    url: window.location.href.substr(0
-                        , window.location.href.indexOf('backend')) + 'backend/PluginConfig/getVariantGroups',
-                    reader: {
-                        type: 'json',
-                        root: 'data',
-                        totalProperty: 'total'
-                    }
-                }
-                }).create();//new ]]>
-            </store>
-            <options>
-                <multiSelect>true</multiSelect>
-                <valueField>id</valueField>
-                <displayField>name</displayField>
-            </options>
         </element>
         <element scope="shop" type="button">
             <name>fillingArticleSeparator</name>

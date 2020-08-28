@@ -3,8 +3,84 @@
         xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/shopware/shopware/5.3/engine/Shopware/Components/Plugin/schema/plugin.xsd">
     <label>filling articles up to the free shipping limit</label>
     <label lang="de">Füllartikel bis zur Versandkosten-Freigrenze</label>
-
     <version>0.0.1</version>
+    <description>
+        <![CDATA[
+        In the shopping cart, a slider with articles is displayed,
+        which can be used to reach the free shipping limit.<br>
+        Under the note about the shipping cost exemption limit, a note about this slider can be displayed.
+        In this hint a link is integrated, which either scrolls to the slider or displays a popup with the slider.
+        The text of the hint can be edited using the text modules, as well as the title of the slider.
+        The articles in the slider can be formed from the following groups.
+        <ul>
+            <li>top seller</li>
+            <li>product stream</li>
+            <li>category and/or manufacturer</li>
+            <li>customer also bought</li>
+            <li>similar article</li>
+            <li>accessories</li>
+        </ul>
+        These items can be limited with the following options:
+        <ul>
+            <li>Maximum number of articles in the slider</li>
+            <li>Combinations (Also show articles that do not reach the free shipping limit.)</li>
+            <li>Minimum article price (€ or % to the shipping cost exemption limit)</li>
+            <li>Maximum overhang over the free shipping limit</li>
+            <li>Exclude article</li>
+            <li>Exclude variant groups</li>
+        </ul>
+        <ul>
+            <li>Randomly</li>
+            <li>Price ascending</li>
+            <li>Price descending</li>
+            <li>Votes descending</li>
+            <li>Inventory ascending</li>
+            <li>Inventory descending</li>
+            <li>Popularity ascending</li>
+            <li>Popularity descending</li>
+        </ul>
+        ]]>
+    </description>
+    <description lang="de">
+        <![CDATA[
+        Im Warenkorb wird ein Slider mit Artikel angezeigt
+        , mit dessen Hilfe die Versandkosten-Freigrenze erreicht werden kann.<br>
+        Unter dem Hinweis zur Versandkosten-Freigrenze kann ein Hinweis auf diesen Slider angezeigt werden.
+        In diesem Hinweis ist ein Link integriert,
+        der wahlweise zum Slider scrollt oder ein Popup mit Slider einblendet.
+        Der Hinweistext kann über die Textbausteine editiert werden, wie auch der Titel des Sliders.<br>
+        Die Artikel im Slider können aus folgenden Gruppen gebildet werden:
+        <ul>
+            <li>Top Seller</li>
+            <li>Product Stream</li>
+            <li>Kategorie und/oder Hersteller</li>
+            <li>Kunden kauften auch</li>
+            <li>Ähnliche Artikel</li>
+            <li>Zubehör</li>
+        </ul>
+        Diese Artikel können mit folgenden Optionen beschränkt werden:
+        <ul>
+            <li>Maximale Artikel-Anzahl im Slider</li>
+            <li>Kombinationen (Auch Artikel anzeigen, die alleine nicht die Versandkosten-Freigrenze erreichen.)</li>
+            <li>Minimaler Artikelpreis (€ oder % zur Versandkosten-Freigrenze)</li>
+            <li>Maximaler Artikelpreis (€ oder % zur Versandkosten-Freigrenze)</li>
+            <li>Maximaler Überhang über die Versandkosten-Freigrenze</li>
+            <li>Artikel ausschließen</li>
+            <li>Varianten-Gruppen ausschließen</li>
+        </ul>
+        Die Artikel können wie folgt sortiert werden:
+        <ul>
+            <li>Zufällig</li>
+            <li>Preis aufsteigend</li>
+            <li>Preis absteigend</li>
+            <li>Bewertung absteigend</li>
+            <li>Lagerbestand aufsteigend</li>
+            <li>Lagerbestand absteigend</li>
+            <li>Beliebtheit aufsteigend</li>
+            <li>Beliebtheit absteigend</li>
+        </ul>
+        ]]>
+    </description>
     <copyright>(c) by Netzhirsch GbR</copyright>
     <license>MIT</license>
     <link>https://netzhirsch.de</link>
