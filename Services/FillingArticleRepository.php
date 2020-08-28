@@ -327,7 +327,7 @@ class FillingArticleRepository
     )
     {
         if (empty(trim($pluginInfos['consider'])))
-            return null;
+            return $fillingArticles;
 
         //********* set condition criteria ****************************************************************************/
         $return = $this->createContextAndConditionCriteria(
@@ -464,11 +464,6 @@ class FillingArticleRepository
         }
         //********* ordernumber condition from ordernumber array create before ****************************************/
         $criteria->addCondition(new OrdernumberCondition($ordernumbers));
-
-        //********* sort first by top seller **************************************************************************/
-        if ($pluginInfos['topSeller']) {
-            $criteria->addSorting(new PopularitySorting(SortingInterface::SORT_DESC));
-        }
 
         //********* second sorting ************************************************************************************/
         if (!empty($pluginInfos['sorting'])) {
