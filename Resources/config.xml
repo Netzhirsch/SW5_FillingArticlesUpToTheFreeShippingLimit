@@ -155,7 +155,7 @@
                     { name:'id', type: 'int' },
                     { name:'name', type: 'string' }
                 ],
-                autoLoad: true,
+                autoLoad: false,
                 pageSize: 25,
                 proxy: {
                     type: 'ajax',
@@ -249,7 +249,7 @@
                     { name:'id', type: 'int' },
                     { name:'name', type: 'string' }
                 ],
-                autoLoad: true,
+                autoLoad: false,
                 pageSize: 25,
                 proxy: {
                     type: 'ajax',
