@@ -1,0 +1,26 @@
+{
+    "name": "netzhirsch/filling-articles-up-to-the-free-shipping-limit",
+    "type": "composer-plugin",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "netzhirsch",
+            "email": "netzhirsch@netzhirsch.de"
+        }
+    ],
+    "extra": {
+        "installer-name": "NetzhirschFillingArticlesUpToTheFreeShippingLimit"
+    },
+    "require-dev": {
+        "shopware/plugin-dev-tools": "master-dev"
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/shopwareLabs/plugin-dev-tools"
+        }
+    ],
+    "require": {
+        "phpunit/phpunit": "^9.2"
+    }
+}
