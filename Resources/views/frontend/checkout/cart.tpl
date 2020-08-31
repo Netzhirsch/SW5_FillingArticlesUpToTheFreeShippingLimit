@@ -28,6 +28,7 @@
                 {$netzhirschFillingArticlesUpToTheFreeShippingLimitHidden
                 = 'netzhirsch_filling_articles_up_to_the_free_shipping_limit--hidden' }
             {/if}
+
             <div id="fillingArticles" class="{$netzhirschFillingArticlesUpToTheFreeShippingLimitHidden}">
                 <div class="panel--body is--rounded product--table premium-product panel">
                     {include file="frontend/_includes/product_slider.tpl"}

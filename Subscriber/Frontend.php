@@ -101,7 +101,6 @@ class Frontend implements SubscriberInterface
 
     /**
      * @param Enlight_Event_EventArgs $args
-     * @throws \Doctrine\ORM\NonUniqueResultException
      */
     public function addTemplate(Enlight_Event_EventArgs $args)
     {

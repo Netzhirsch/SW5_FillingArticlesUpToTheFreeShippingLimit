@@ -6,9 +6,11 @@ namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit\Services;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Driver\ResultStatement;
+use FillingArticleQueryInfos;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\CombineContion;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\MaxOverhangCondition;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\NotInArticleIdsCondition;
+use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\NotInArticleNamesCondition;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\SeparatelyCondition;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Sorting\VoteSorting;
 use Shopware\Bundle\SearchBundle\Condition\CategoryCondition;
@@ -98,19 +100,15 @@ class FillingArticleRepository
     }
 
     public function getFillingArticlesFromTopSeller(
-        $fillingArticles,
-        $pluginInfos,
-        $articlesInBasketIds,
-        $sShippingcostsDifference
+        FillingArticleQueryInfos $fillingArticleQueryInfos
     ){
+        $fillingArticles = $fillingArticleQueryInfos->getFillingArticles();
         if (empty($pluginInfos['topSeller']))
             return $fillingArticles;
 
         //********* set condition criteria ****************************************************************************/
         $return = $this->createContextAndConditionCriteria(
-            $pluginInfos,
-            $articlesInBasketIds,
-            $sShippingcostsDifference
+            $fillingArticleQueryInfos
         );
 
         if (empty($return))
@@ -132,11 +130,10 @@ class FillingArticleRepository
 
 
     public function getFillingArticlesFromSimilar(
-        $fillingArticles,
-        $pluginInfos,
-        $articlesInBasketIds,
-        $sShippingcostsDifference
+        FillingArticleQueryInfos $fillingArticleQueryInfos
     ) {
+        $fillingArticles = $fillingArticleQueryInfos->getFillingArticles();
+
         if (empty($pluginInfos['similarArticles']))
             return $fillingArticles;
 
@@ -144,10 +141,23 @@ class FillingArticleRepository
         $query->select('similar.relatedarticle')
             ->from('s_articles_similar', 'similar')
             ->innerJoin('similar', 's_articles', 'product', 'product.id = similar.articleID')
-            ->innerJoin('similar', 's_articles', 'similarArticles', 'similarArticles.id = similar.relatedArticle')
-            ->innerJoin('similarArticles', 's_articles_details', 'similarVariant', 'similarVariant.id = similarArticles.main_detail_id')
+            ->innerJoin(
+                'similar',
+                's_articles',
+                'similarArticles',
+                'similarArticles.id = similar.relatedArticle'
+            )
+            ->innerJoin('similarArticles',
+                's_articles_details',
+                'similarVariant',
+                'similarVariant.id = similarArticles.main_detail_id'
+            )
             ->where('product.id IN (:ids)')
-            ->setParameter(':ids', $articlesInBasketIds, Connection::PARAM_INT_ARRAY);
+            ->setParameter(
+                ':ids',
+                $fillingArticleQueryInfos->getArticleIdsFromBasket(),
+                Connection::PARAM_INT_ARRAY
+            );
 
         /** @var ResultStatement $statement */
         $statement = $query->execute();
@@ -155,9 +165,7 @@ class FillingArticleRepository
         $similarIds = $statement->fetch();
         //********* set condition criteria ****************************************************************************/
         $return = $this->createContextAndConditionCriteria(
-            $pluginInfos,
-            $articlesInBasketIds,
-            $sShippingcostsDifference
+            $fillingArticleQueryInfos
         );
         if (empty($return))
             return $fillingArticles;
@@ -175,18 +183,15 @@ class FillingArticleRepository
     }
 
     public function getFillingArticlesFromAlsoBought(
-        $fillingArticles,
-        $pluginInfos,
-        $articlesInBasketIds,
-        $sShippingcostsDifference
+        FillingArticleQueryInfos $fillingArticleQueryInfos
     )
     {
         if (empty($pluginInfos['customersAlsoBought']))
-            return $fillingArticles;
+            return $fillingArticleQueryInfos->getFillingArticles();
 
         $alsoBoughtArticleIdsArray = [];
         $marketing = Shopware()->Modules()->Marketing();
-        foreach ($articlesInBasketIds as $articlesInBasketId) {
+        foreach ($fillingArticleQueryInfos->getArticleIdsFromBasket() as $articlesInBasketId) {
             $categoryID = Shopware()->Modules()->Categories()->sGetCategoryIdByArticleId($articlesInBasketId);
             $marketing->categoryId = $categoryID ;
             $articlesFromAlsoBought = $marketing->sGetAlsoBoughtArticles($articlesInBasketId);
@@ -197,30 +202,27 @@ class FillingArticleRepository
 
         //********* set condition criteria ****************************************************************************/
         $return = $this->createContextAndConditionCriteria(
-            $pluginInfos,
-            $articlesInBasketIds,
-            $sShippingcostsDifference
+            $fillingArticleQueryInfos
         );
         if (empty($return))
-            return $fillingArticles;
+            return $fillingArticleQueryInfos->getFillingArticles();
 
         $criteria = $return['criteria'];
 
         $criteria->addCondition(new ProductIdCondition($alsoBoughtArticleIdsArray));
 
-        return $this->getProductFromVariantSearch($criteria,$return['context'],$fillingArticles);
+        return $this->getProductFromVariantSearch(
+            $criteria,$return['context'],$fillingArticleQueryInfos->getFillingArticles()
+        );
     }
     public function getFillingArticlesFromAccessories(
-        $fillingArticles,
-        $pluginInfos,
-        $articlesInBasketIds,
-        $sShippingcostsDifference
+        FillingArticleQueryInfos $fillingArticleQueryInfos
     )
     {
         if (empty($pluginInfos['accessories']))
-            return $fillingArticles;
+            return $fillingArticleQueryInfos;
 
-        $articlesInBasketIdsString = implode(',',$articlesInBasketIds);
+        $articlesInBasketIdsString = implode(',',$fillingArticleQueryInfos->getArticleIdsFromBasket());
         // default query
         $sql = "
         SELECT relationships.relatedarticle
@@ -240,36 +242,30 @@ class FillingArticleRepository
 
         //********* set condition criteria ****************************************************************************/
         $return = $this->createContextAndConditionCriteria(
-            $pluginInfos,
-            $articlesInBasketIds,
-            $sShippingcostsDifference
+            $fillingArticleQueryInfos
         );
         if (empty($return))
-            return $fillingArticles;
+            return $fillingArticleQueryInfos;
 
         $criteria = $return['criteria'];
 
         $criteria->addCondition(new ProductIdCondition($relatedarticleIdsArray));
 
-        return $this->getProductFromVariantSearch($criteria,$return['context'],$fillingArticles);
+        return $this->getProductFromVariantSearch(
+            $criteria,$return['context'],$fillingArticleQueryInfos->getFillingArticles()
+        );
     }
 
     /**
      * Returns the fill articles according to the product streams.
-     * @param $fillingArticles
-     * @param $pluginInfos
-     * @param $articlesInBasketIds
-     * @param $sShippingcostsDifference
+     * @param FillingArticleQueryInfos $fillingArticleQueryInfos
      * @return array $fillingArticles
      */
     public function getFillingArticlesFromProductStreams(
-        $fillingArticles,
-        $pluginInfos,
-        $articlesInBasketIds,
-        $sShippingcostsDifference
+        FillingArticleQueryInfos $fillingArticleQueryInfos
     ){
         if (empty($pluginInfos['productStream']))
-            return $fillingArticles;
+            return $fillingArticleQueryInfos->getFillingArticles();
 
 
 
@@ -285,14 +281,14 @@ class FillingArticleRepository
             ->getResult();
 
             //********* get filling articles from product streams *****************************************************/
+        $fillingArticles = $fillingArticleQueryInfos->getFillingArticles();
         if (!empty($productSteams)) {
 
-            $fillingArticles = [];
             foreach ($productSteams as $productSteam) {
 
                 //********* to reset we need to do this every product stream ******************************************/
                 $return = $this->createContextAndConditionCriteria(
-                    $pluginInfos,$articlesInBasketIds,$sShippingcostsDifference
+                    $fillingArticleQueryInfos
                 );
                 $criteria = $return['criteria'];
 
@@ -300,18 +296,18 @@ class FillingArticleRepository
                 $variantSearch = $this->variantSearch;
                 $searchQuery = $variantSearch->search($criteria,$return['context']);
                 if (empty($searchQuery))
-                    return $fillingArticles;
+                    return $fillingArticleQueryInfos->getFillingArticles();
 
                 $products = $searchQuery->getProducts();
                 if (empty($products))
-                    return $fillingArticles;
+                    return $fillingArticleQueryInfos->getFillingArticles();
 
                 // convert product model to frontend product array
                 $articleFromProductStream = $this->legacyStructConverter->convertListProductStructList($products);
                 if (empty($articleFromProductStream))
-                    return $fillingArticles;
+                    return $fillingArticleQueryInfos->getFillingArticles();
 
-                $fillingArticles = array_merge($fillingArticles,$articleFromProductStream);
+                $fillingArticles = array_merge($fillingArticleQueryInfos->getFillingArticles(),$articleFromProductStream);
             }
         }
 
@@ -319,60 +315,60 @@ class FillingArticleRepository
     }
 
     public function getFillingArticlesFromCategoryManufacture(
-        $fillingArticles,
-        $articlesInBasketIds,
-        $pluginInfos,
-        $sShippingcostsDifference,
-        $sBasket
+        FillingArticleQueryInfos $fillingArticleQueryInfos
     )
     {
         if (empty(trim($pluginInfos['consider'])))
-            return $fillingArticles;
+            return $fillingArticleQueryInfos->getFillingArticles();
 
         //********* set condition criteria ****************************************************************************/
-        $return = $this->createContextAndConditionCriteria(
-            $pluginInfos,
-            $articlesInBasketIds,
-            $sShippingcostsDifference
-        );
+        $return = $this->createContextAndConditionCriteria($fillingArticleQueryInfos);
 
         if (empty($return))
-            return $fillingArticles;
+            return $fillingArticleQueryInfos->getFillingArticles();
 
         $criteria = $return['criteria'];
 
         //********* categories and suppliers condition ****************************************************************/
         $idFromAssign = $this->idFromAssign;
-        switch ($pluginInfos['consider']) {
+        switch ($fillingArticleQueryInfos->getPluginInfos()['consider']) {
             case 'category':
-                $criteria->addCondition(new CategoryCondition($this->getCategoryIdsFromArticleIds($articlesInBasketIds)));
+                $criteria->addCondition(new CategoryCondition(
+                    $this->getCategoryIdsFromArticleIds($fillingArticleQueryInfos->getArticleIdsFromBasket()))
+                );
                 break;
             case 'supplier':
-                $criteria->addCondition(new ManufacturerCondition($idFromAssign->getSupplierIdsFromBasket($sBasket)));
+                $criteria->addCondition(new ManufacturerCondition($fillingArticleQueryInfos->getSupplierIds()));
                 break;
             case 'categoryAndSupplier':
                 $criteria->addCondition(new CombinedCondition([
-                    new CategoryCondition($this->getCategoryIdsFromArticleIds($articlesInBasketIds)),
-                    new ManufacturerCondition($idFromAssign->getSupplierIdsFromBasket($sBasket))
+                    new CategoryCondition($this->getCategoryIdsFromArticleIds(
+                        $fillingArticleQueryInfos->getArticleIdsFromBasket())
+                    ),
+                    new ManufacturerCondition($idFromAssign->getSupplierIdsFromBasket(
+                        $fillingArticleQueryInfos->getSupplierIds())
+                    )
                 ]));
                 break;
             case 'categoryOrSupplier':
                 $criteria->addCondition(new SeparatelyCondition([
-                    'categoryIDs' => $this->getCategoryIdsFromArticleIds($articlesInBasketIds),
-                    'supplierIDs' => $idFromAssign->getSupplierIdsFromBasket($sBasket)
+                    'categoryIDs' => $this->getCategoryIdsFromArticleIds(
+                        $fillingArticleQueryInfos->getArticleIdsFromBasket()
+                    ),
+                    'supplierIDs' => $fillingArticleQueryInfos->getSupplierIds()
                 ]));
                 break;
             default:
                 break;
         }
 
-        return $this->getProductFromVariantSearch($criteria,$return['context'],$fillingArticles);
+        return $this->getProductFromVariantSearch(
+            $criteria,$return['context'],$fillingArticleQueryInfos->getFillingArticles()
+        );
     }
 
     public function createContextAndConditionCriteria(
-        $pluginInfos,
-        $articlesInBasketIds,
-        $sShippingcostsDifference
+        FillingArticleQueryInfos $fillingArticleQueryInfos
     ){
         //********* get default criteria ******************************************************************************/
         $contextService = $this->contextService;
@@ -384,12 +380,20 @@ class FillingArticleRepository
         $criteria = $criteria->createCriteria(
             Shopware()->Front()->Request(), $context
         );
+        $pluginInfos = $fillingArticleQueryInfos->getPluginInfos();
+        $sShippingcostsDifference = $fillingArticleQueryInfos->getSShippingcostsDifference();
         $criteria->offset(0)
             ->limit($pluginInfos['maxArticle']);
 
 
-        //********* exlude article conditions ************************************************************************/
-        $criteria->addBaseCondition(new NotInArticleIdsCondition($articlesInBasketIds));
+        //********* exlude article conditions shopware 5.2 use name ***************************************************/
+        if (empty($articlesInBasketNames)) {
+            $criteria->addBaseCondition(new NotInArticleIdsCondition(
+                $fillingArticleQueryInfos->getArticleIdsFromBasket())
+            );
+        } else {
+            $criteria->addBaseCondition(new NotInArticleNamesCondition($articlesInBasketNames));
+        }
 
         //********* price condition ***********************************************************************************/
         $minimumArticlePrice = ($pluginInfos['minimumArticlePrice'] ? $pluginInfos['minimumArticlePrice'] : 0.00);

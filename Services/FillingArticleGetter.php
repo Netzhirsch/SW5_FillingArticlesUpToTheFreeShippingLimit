@@ -2,6 +2,8 @@
 
 namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit\Services;
 
+use FillingArticleQueryInfos;
+
 class FillingArticleGetter
 {
     /**
@@ -31,77 +33,62 @@ class FillingArticleGetter
         if (empty($sBasket))
             return [];
 
-        $articlesInBasketIds = $this->idFromAssign->getArticleIdsFromBasket($sBasket);
+        //********* shopware 5.2 save names in excludedArticles *******************************************************/
+        $excludedArticlesByNames = [];
+        $excludedArticlesByIds = [];
         //********* exlude articles by plugin setting *****************************************************************/
         if (!empty($pluginInfos['excludedArticles'])) {
             foreach ($pluginInfos['excludedArticles'] as $excludedArticle) {
-                $articlesInBasketIds[$excludedArticle] = $excludedArticle;
+                if (is_integer($excludedArticle)) {
+                    $excludedArticlesByIds[$excludedArticle] = $excludedArticle;
+                } else {
+                    $excludedArticlesByNames = $excludedArticle;
+                }
             }
         }
+
         $fillingArticleRepository = $this->fillingArticleRepository;
         $fillingArticles = [];
 
-        $articlesFromAccessories = $fillingArticleRepository->getFillingArticlesFromAccessories(
-            $fillingArticles,
-            $pluginInfos,
-            $articlesInBasketIds,
-            $sShippingcostsDifference
-        );
-
-        if (!empty($articlesFromAccessories))
-            $fillingArticles = array_merge($fillingArticles,$articlesFromAccessories);
-
-        $articlesFromSimilarProducts = $fillingArticleRepository->getFillingArticlesFromSimilar(
-            $fillingArticles,
-            $pluginInfos,
-            $articlesInBasketIds,
-            $sShippingcostsDifference
-        );
-
-        if (!empty($articlesFromSimilarProducts))
-            $fillingArticles = array_merge($fillingArticles,$articlesFromSimilarProducts);
-
-        $articlesFromTopSeller = $fillingArticleRepository->getFillingArticlesFromTopseller(
-            $fillingArticles,
-            $pluginInfos,
-            $articlesInBasketIds,
-            $sShippingcostsDifference
-        );
-
-        if (!empty($articlesFromTopSeller))
-            $fillingArticles = array_merge($fillingArticles,$articlesFromTopSeller);
-
-        $articlesFromProductStream = $fillingArticleRepository->getFillingArticlesFromProductStreams(
-            $fillingArticles,
-            $pluginInfos,
-            $articlesInBasketIds,
-            $sShippingcostsDifference
-        );
-
-        if (!empty($articlesFromProductStream))
-            $fillingArticles = array_merge($fillingArticles,$articlesFromProductStream);
-
-        $articlesFromAlsoBought = $fillingArticleRepository->getFillingArticlesFromAlsoBought(
-            $fillingArticles,
-            $pluginInfos,
-            $articlesInBasketIds,
-            $sShippingcostsDifference
-        );
-
-        if (!empty($articlesFromAlsoBought))
-            $fillingArticles = array_merge($fillingArticles,$articlesFromAlsoBought);
-
-        //********* get article collection ****************************************************************************/
-        $articlesFromCategoryManufacture = $fillingArticleRepository->getFillingArticlesFromCategoryManufacture(
-            $fillingArticles,
-            $articlesInBasketIds,
+        $fillingArticleQueryInfos = new FillingArticleQueryInfos(
             $pluginInfos,
             $sShippingcostsDifference,
-            $sBasket
+            $this->idFromAssign->getSupplierIdsFromBasket($sBasket),
+            $this->idFromAssign->getArticleIdsFromBasket($sBasket),
+            $excludedArticlesByIds,
+            $excludedArticlesByNames,
+            []
         );
-        if (!empty($articlesFromCategoryManufacture))
-            $fillingArticles
-                = array_merge($fillingArticles,$articlesFromCategoryManufacture);
+
+        $fillingArticleQueryInfos
+            ->addFillingArticles($fillingArticleRepository
+                ->getFillingArticlesFromAccessories($fillingArticleQueryInfos)
+            );
+
+        $fillingArticleQueryInfos
+            ->addFillingArticles($fillingArticleRepository
+                ->getFillingArticlesFromSimilar($fillingArticleQueryInfos)
+            );
+
+        $fillingArticleQueryInfos
+            ->addFillingArticles($fillingArticleRepository
+                ->getFillingArticlesFromTopseller($fillingArticleQueryInfos)
+            );
+
+        $fillingArticleQueryInfos
+            ->addFillingArticles($fillingArticleRepository
+                ->getFillingArticlesFromProductStreams($fillingArticleQueryInfos)
+            );
+
+        $fillingArticleQueryInfos
+            ->addFillingArticles($fillingArticleRepository
+                ->getFillingArticlesFromAlsoBought($fillingArticleQueryInfos)
+            );
+
+        $fillingArticleQueryInfos
+            ->addFillingArticles($fillingArticleRepository
+                ->getFillingArticlesFromCategoryManufacture($fillingArticleQueryInfos)
+            );
 
         $fillingArticles = array_slice($fillingArticles, 0, $pluginInfos['maxArticle']);
         //********* sorting ****************************************************************************************/
