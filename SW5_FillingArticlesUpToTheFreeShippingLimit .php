@@ -8,7 +8,7 @@ use Shopware\Components\Plugin\Context\DeactivateContext;
 use Shopware\Components\Plugin\Context\InstallContext;
 use Shopware\Components\Plugin\Context\UninstallContext;
 
-class NetzhirschFillingArticlesUpToTheFreeShippingLimit extends Plugin
+class SW5_FillingArticlesUpToTheFreeShippingLimit  extends Plugin
 {
 
     public function install(InstallContext $context)
