@@ -24,6 +24,7 @@ class ArticleFromAssignTest extends Enlight_Components_Test_Controller_TestCase
             ->from(Article::class,'article')
             ->getQuery()
             ->getResult();
+        $basket = [];
         foreach ($articles as $article) {
             foreach ($article->getMainDetail()->getPrices() as $price) {
             $basket = [
@@ -32,7 +33,6 @@ class ArticleFromAssignTest extends Enlight_Components_Test_Controller_TestCase
             ]];
             }
         }
-
         foreach ($basket['content'] as $key => $article) {
             $return = $articleFromAssign->assignMissingAmountToShippingCostFreeBoarder($basket,$article['price']);
             $this->assertEquals(1.0, $return['content'][$key]['MissingAmountToShippingCostFreeBoarder'],$key);
