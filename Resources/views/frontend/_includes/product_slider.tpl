@@ -3,24 +3,26 @@
 {block name="frontend_common_product_slider_container"}
 
 
-
     {$CartFreeShippingFillingArticleMessageSliderTitel
         = "{s name='CartFreeShippingFillingArticleMessageSliderTitel'}Füllartikel{/s}"}
 
-    <div
-            class="
-                    panel--title
-                    is--underline
-                    product-slider--title
-            "
-            data-cart-free-shipping-filling-article-message-slider-titel=
-                "{$CartFreeShippingFillingArticleMessageSliderTitel}"
-    >
-        {$CartFreeShippingFillingArticleMessageSliderTitel}
-    </div>
-    <div class="product-slider--container">
+    <div class="product-slider">
+        <div
+                class="
+                        panel--title
+                        is--underline
+                        product-slider--title
+                "
+                data-cart-free-shipping-filling-article-message-slider-titel=
+                    "{$CartFreeShippingFillingArticleMessageSliderTitel}"
+        >
+            {$CartFreeShippingFillingArticleMessageSliderTitel}
+        </div>
 
-        {include file="frontend/_includes/product_slider_items.tpl" fillingArticles=$fillingArticles}
+        <div class="product-slider--container">
 
+            {include file="frontend/_includes/product_slider_items.tpl" fillingArticles=$fillingArticles}
+
+        </div>
     </div>
 {/block}

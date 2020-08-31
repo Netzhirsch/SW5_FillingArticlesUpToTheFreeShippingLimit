@@ -23,15 +23,16 @@
 
 {/block}
 {block name='frontend_checkout_cart_premium'}
-    {block name='frontend_checkout_cart_promotion'}
-        {if $displayVariants == 'popup' || $displayVariants == 'scroll out'}
-            {$netzhirschFillingArticlesUpToTheFreeShippingLimitHidden
-            = 'netzhirsch_filling_articles_up_to_the_free_shipping_limit--hidden' }
-        {/if}
-
-        <div id="fillingArticles" class="panel--body is--rounded product--table premium-product panel {$netzhirschFillingArticlesUpToTheFreeShippingLimitHidden}">
-            {include file="frontend/_includes/product_slider.tpl"}
-        </div>
-    {/block}
-    {$smarty.block.parent}
+        {block name='frontend_checkout_cart_promotion'}
+            {if $displayVariants == 'popup' || $displayVariants == 'scroll out'}
+                {$netzhirschFillingArticlesUpToTheFreeShippingLimitHidden
+                = 'netzhirsch_filling_articles_up_to_the_free_shipping_limit--hidden' }
+            {/if}
+            <div id="fillingArticles" class="{$netzhirschFillingArticlesUpToTheFreeShippingLimitHidden}">
+                <div class="panel--body is--rounded product--table premium-product panel">
+                    {include file="frontend/_includes/product_slider.tpl"}
+                </div>
+            </div>
+        {/block}
+        {$smarty.block.parent}
 {/block}
