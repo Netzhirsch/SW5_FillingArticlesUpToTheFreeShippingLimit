@@ -99,7 +99,7 @@ class FillingArticleRepository
 
     public function getFillingArticlesFromTopSeller(
         $fillingArticles,
-        $pluginInfos, 
+        $pluginInfos,
         $articlesInBasketIds,
         $sShippingcostsDifference
     ){
@@ -112,7 +112,7 @@ class FillingArticleRepository
             $articlesInBasketIds,
             $sShippingcostsDifference
         );
-        
+
         if (empty($return))
             return $fillingArticles;
 
@@ -226,7 +226,7 @@ class FillingArticleRepository
         SELECT relationships.relatedarticle
         FROM
             s_articles_relationships relationships
-        LEFT JOIN 
+        LEFT JOIN
             s_articles articles ON articles.id = relationships.articleID
         WHERE relationships.relatedarticle NOT IN ('$articlesInBasketIdsString')
         AND relationships.articleID IN ('$articlesInBasketIdsString')
@@ -382,7 +382,7 @@ class FillingArticleRepository
         //********* max filling article *******************************************************************************/
         $criteria = $this->criteriaFactory;
         $criteria = $criteria->createCriteria(
-            Shopware()->Container()->get('request_stack')->getCurrentRequest(), $context
+            Shopware()->Front()->Request(), $context
         );
         $criteria->offset(0)
             ->limit($pluginInfos['maxArticle']);
@@ -452,7 +452,7 @@ class FillingArticleRepository
         $criteria = $this->criteriaFactory;
         $criteria
             = $criteria->createCriteria(
-                Shopware()->Container()->get('request_stack')->getCurrentRequest(),
+                Shopware()->Front()->Request(),
                 $context
         );
         $criteria->offset(0);
