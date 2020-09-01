@@ -42,7 +42,7 @@ class FillingArticleGetter
                 if (is_integer($excludedArticle)) {
                     $excludedArticlesByIds[$excludedArticle] = $excludedArticle;
                 } else {
-                    $excludedArticlesByNames = $excludedArticle;
+                    $excludedArticlesByNames[] = $excludedArticle;
                 }
             }
         }
