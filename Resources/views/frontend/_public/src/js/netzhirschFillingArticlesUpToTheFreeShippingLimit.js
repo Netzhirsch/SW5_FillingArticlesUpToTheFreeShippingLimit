@@ -17,36 +17,24 @@ $(document).ready(function () {
     });
 
     //filling article slider
-
     $('a[href="#fillingArticles"]').on("click", function (event) {
         event.preventDefault();
-
         let fillingArticlesContainer = $('#fillingArticles');
         // display variante popup
         if (fillingArticlesContainer.hasClass('netzhirsch_filling_articles_up_to_the_free_shipping_limit--hidden')) {
-            // console.debug(fillingArticlesContainer);
-            // let parent = fillingArticlesContainer.parents('.product-slider');
-            // parent = parent[0];
-            // console.debug(parent);
             let content = fillingArticlesContainer.html();
             $.modal.open(content, {
                 overlay: true,
-                width: 300,
+                width: 226,
                 height: 420
             });
-            // Initialisierung über den StateManager
+
             window.StateManager.addPlugin(
-                '.product-slider',
-                'swProductSlider',
-                {
-                    itemMinWidth: 300,
-
-                },
+                '.js--modal .product-slider',
+                'swProductSlider',{
+                }
             );
-            $('.product-slider').swProductSlider({
-                itemMinWidth: 300,
 
-            });
         } else {
 
             // smoothe scroll
