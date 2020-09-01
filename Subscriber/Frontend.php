@@ -106,6 +106,11 @@ class Frontend implements SubscriberInterface
     {
         /** @var Enlight_View_Default $view */
         $view = $args->get('subject')->View();
+        /**
+         * template must set before any return because of the cache
+         * see https://forum.shopware.com/discussion/49501/plugin-uncaught-smartyexception-directory-not-allowed-by-security-setting
+         */
+        $view->addTemplateDir($this->pluginDirectory . '/Resources/views');
 
         $assign = $view->getAssign();
         $sShippingcostsDifference = $assign['sShippingcostsDifference'];
@@ -147,7 +152,6 @@ class Frontend implements SubscriberInterface
             $view->assign(['displayVariants' => $pluginInfos['displayVariants']]);
             $view->assign(['viewInAjaxBasket' => $pluginInfos['viewInAjaxBasket']]);
             $view->assign(['fillingArticles' => $fillingArticles]);
-            $view->addTemplateDir($this->pluginDirectory . '/Resources/views');
         }
     }
 
