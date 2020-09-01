@@ -6,6 +6,13 @@ $(document).ready(function () {
         fillingArticleSlider();
     });
 
+    // remove empty slider container
+    $.subscribe('plugin/swResponsive/onCartRefreshSuccess', function () {
+        if ($('.container--ajax-cart .product-slider--item').length === 0) {
+            $('.container--ajax-cart .product-slider--container').remove();
+        }
+    });
+
     $.subscribe('plugin/swCollapseCart/onRemoveArticleFinished', function() {
         addArticleToAjaxCart();
         fillingArticleSlider();
