@@ -1,5 +1,6 @@
 <?php
 
+namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit\Models;
 
 class FillingArticleQueryInfos
 {
@@ -121,8 +122,10 @@ class FillingArticleQueryInfos
     {
         if (!empty($this->getFillingArticles()))
             $this->fillingArticles = array_merge($this->getFillingArticles(),$fillingArticles);
-        else
+        elseif(!empty($fillingArticles))
             $this->fillingArticles = $fillingArticles;
+        else
+            $this->fillingArticles = [];
 
         return $this->fillingArticles;
     }

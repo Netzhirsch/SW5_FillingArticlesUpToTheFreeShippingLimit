@@ -2,7 +2,7 @@
 
 namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit\Services;
 
-use FillingArticleQueryInfos;
+use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Models\FillingArticleQueryInfos;
 
 class FillingArticleGetter
 {
@@ -48,7 +48,6 @@ class FillingArticleGetter
         }
 
         $fillingArticleRepository = $this->fillingArticleRepository;
-        $fillingArticles = [];
 
         $fillingArticleQueryInfos = new FillingArticleQueryInfos(
             $pluginInfos,
@@ -90,7 +89,7 @@ class FillingArticleGetter
                 ->getFillingArticlesFromCategoryManufacture($fillingArticleQueryInfos)
             );
 
-        $fillingArticles = array_slice($fillingArticles, 0, $pluginInfos['maxArticle']);
+        $fillingArticles = array_slice($fillingArticleQueryInfos->getFillingArticles(), 0, $pluginInfos['maxArticle']);
         //********* sorting ****************************************************************************************/
         $fillingArticles
             = $fillingArticleRepository->getSortedFillingArticle($fillingArticles,$pluginInfos);

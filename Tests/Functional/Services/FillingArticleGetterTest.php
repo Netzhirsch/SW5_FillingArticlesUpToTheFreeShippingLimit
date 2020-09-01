@@ -3,6 +3,7 @@
 namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit\Tests\Functional\Services;
 
 use Enlight_Components_Test_Controller_TestCase;
+use Enlight_Exception;
 use Shopware\Models\Article\Article;
 
 class FillingArticleGetterTest extends Enlight_Components_Test_Controller_TestCase
@@ -10,6 +11,7 @@ class FillingArticleGetterTest extends Enlight_Components_Test_Controller_TestCa
 
     /**
      * @group filling_article_getter
+     * @throws Enlight_Exception
      */
     public function testAssignMissingAmountToShippingCostFreeBoarder(){
 
@@ -64,6 +66,14 @@ class FillingArticleGetterTest extends Enlight_Components_Test_Controller_TestCa
 
     }
 
+    /**
+     * @param $pluginInfos
+     * @param $expectedArticleAmount
+     * @param $articles
+     * @param $fillingArticlesGetter
+     * @param $message
+     * @throws Enlight_Exception
+     */
     private function assertFillingArticleCount($pluginInfos,$expectedArticleAmount,$articles,$fillingArticlesGetter,$message)
     {
         foreach ($articles as $key => $article) {
@@ -74,6 +84,7 @@ class FillingArticleGetterTest extends Enlight_Components_Test_Controller_TestCa
                     'supplierID' => $article->getSupplier()->getId()
                 ]
             ];
+            Shopware()->Front()->setRequest($this->__get('request'));
             $fillingArticles = $fillingArticlesGetter->getFillingArticles($basket,$pluginInfos,20);
             if ($message != 'maxArtikel')
                 $this->assertCount($expectedArticleAmount[$key],$fillingArticles

@@ -1,6 +1,6 @@
 <?php
 
-namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit\Models;
+namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit;
 
 use Shopware\Components\Plugin;
 use Shopware\Components\Plugin\Context\ActivateContext;

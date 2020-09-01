@@ -6,7 +6,7 @@ namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit\Services;
 
 use Doctrine\DBAL\Connection;
 use Doctrine\DBAL\Driver\ResultStatement;
-use FillingArticleQueryInfos;
+use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Models\FillingArticleQueryInfos;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\CombineContion;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\MaxOverhangCondition;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\NotInArticleIdsCondition;
@@ -103,6 +103,7 @@ class FillingArticleRepository
         FillingArticleQueryInfos $fillingArticleQueryInfos
     ){
         $fillingArticles = $fillingArticleQueryInfos->getFillingArticles();
+        $pluginInfos = $fillingArticleQueryInfos->getPluginInfos();
         if (empty($pluginInfos['topSeller']))
             return $fillingArticles;
 
@@ -133,7 +134,7 @@ class FillingArticleRepository
         FillingArticleQueryInfos $fillingArticleQueryInfos
     ) {
         $fillingArticles = $fillingArticleQueryInfos->getFillingArticles();
-
+        $pluginInfos = $fillingArticleQueryInfos->getPluginInfos();
         if (empty($pluginInfos['similarArticles']))
             return $fillingArticles;
 
@@ -186,6 +187,7 @@ class FillingArticleRepository
         FillingArticleQueryInfos $fillingArticleQueryInfos
     )
     {
+        $pluginInfos = $fillingArticleQueryInfos->getPluginInfos();
         if (empty($pluginInfos['customersAlsoBought']))
             return $fillingArticleQueryInfos->getFillingArticles();
 
@@ -219,8 +221,9 @@ class FillingArticleRepository
         FillingArticleQueryInfos $fillingArticleQueryInfos
     )
     {
+        $pluginInfos = $fillingArticleQueryInfos->getPluginInfos();
         if (empty($pluginInfos['accessories']))
-            return $fillingArticleQueryInfos;
+            return [];
 
         $articlesInBasketIdsString = implode(',',$fillingArticleQueryInfos->getArticleIdsFromBasket());
         // default query
@@ -264,6 +267,7 @@ class FillingArticleRepository
     public function getFillingArticlesFromProductStreams(
         FillingArticleQueryInfos $fillingArticleQueryInfos
     ){
+        $pluginInfos = $fillingArticleQueryInfos->getPluginInfos();
         if (empty($pluginInfos['productStream']))
             return $fillingArticleQueryInfos->getFillingArticles();
 
@@ -331,7 +335,8 @@ class FillingArticleRepository
 
         //********* categories and suppliers condition ****************************************************************/
         $idFromAssign = $this->idFromAssign;
-        switch ($fillingArticleQueryInfos->getPluginInfos()['consider']) {
+        $pluginInfos = $fillingArticleQueryInfos->getPluginInfos();
+        switch ($pluginInfos['consider']) {
             case 'category':
                 $criteria->addCondition(new CategoryCondition(
                     $this->getCategoryIdsFromArticleIds($fillingArticleQueryInfos->getArticleIdsFromBasket()))

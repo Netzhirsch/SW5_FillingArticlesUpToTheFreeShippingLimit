@@ -3,6 +3,7 @@
 namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit\Tests\Functional\Services;
 
 use Enlight_Components_Test_Controller_TestCase;
+use Enlight_Exception;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Services\ArticleFromAssign;
 use Shopware\Models\Article\Article;
 
@@ -69,11 +70,12 @@ class ArticleFromAssignTest extends Enlight_Components_Test_Controller_TestCase
 
     /**
      * @group article_from_assign
+     * @throws Enlight_Exception
      */
     public function testGetSupplierIdsFromBasket()
     {
-        $articleFromAssign = new ArticleFromAssign();
 
+        $articleFromAssign = new ArticleFromAssign();
         $supplierIdsFromBasket = $articleFromAssign->getSupplierIdsFromBasket([]);
         $this->assertEmpty($supplierIdsFromBasket);
 
