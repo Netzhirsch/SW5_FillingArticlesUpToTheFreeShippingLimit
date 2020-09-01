@@ -39,16 +39,6 @@
                     <label>popup</label>
                     <label lang="de">Popup</label>
                 </option>
-                <option>
-                    <value>scroll out</value>
-                    <label>scroll out</label>
-                    <label lang="de">ausfahren</label>
-                </option>
-                <option>
-                    <value>scroll to</value>
-                    <label>scroll to</label>
-                    <label lang="de">hinfahren</label>
-                </option>
             </store>
         </element>
         <element scope="shop" type="number">
