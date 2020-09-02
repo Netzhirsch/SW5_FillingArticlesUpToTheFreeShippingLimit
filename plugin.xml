@@ -3,7 +3,7 @@
         xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/shopware/shopware/5.3/engine/Shopware/Components/Plugin/schema/plugin.xsd">
     <label>filling articles up to the free shipping limit</label>
     <label lang="de">Füllartikel bis zur Versandkosten-Freigrenze</label>
-    <version>0.0.1</version>
+    <version>1.0.0</version>
     <compatibility minVersion="5.4.6" maxVersion="5.7" />
     <copyright>(c) by netzhirsch Gbr</copyright>
     <license>MIT</license>
@@ -90,6 +90,8 @@
     <license>MIT</license>
     <link>https://netzhirsch.de</link>
     <author>Netzhirsch GbR</author>
-    <compatibility minVersion="5.3.0"/>
-
+    <changelog version="1.0.0">
+        <changes lang="de">Erstveröffentlichung.</changes>
+        <changes>Initial release.</changes>
+    </changelog>
 </plugin>
