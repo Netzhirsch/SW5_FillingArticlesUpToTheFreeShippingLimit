@@ -5,11 +5,11 @@ namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit\Tests\Functional\Ser
 use Doctrine\ORM\NonUniqueResultException;
 use Enlight_Components_Test_Controller_TestCase;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Models\FillingArticleQueryInfos;
-use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Services\FillingArticleRepository;
+use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Services\FillingArticleSearch;
 use Shopware\Bundle\SearchBundle\Criteria;
 use Shopware\Models\Article\Article;
 
-class FillingArticleRepositoryTest extends Enlight_Components_Test_Controller_TestCase
+class FillingArticleSearchTest extends Enlight_Components_Test_Controller_TestCase
 {
 
     /**
@@ -118,7 +118,7 @@ class FillingArticleRepositoryTest extends Enlight_Components_Test_Controller_Te
     }
 
     private function accessories(
-        FillingArticleRepository $fillingArticlesRepository,
+        FillingArticleSearch $fillingArticlesRepository,
         FillingArticleQueryInfos $fillingArticleQueryInfos
     ) {
 
@@ -145,7 +145,7 @@ class FillingArticleRepositoryTest extends Enlight_Components_Test_Controller_Te
     }
 
     private function topSeller(
-        FillingArticleRepository $fillingArticlesRepository,
+        FillingArticleSearch $fillingArticlesRepository,
         FillingArticleQueryInfos $fillingArticleQueryInfos,
         $filtername
     ) {
@@ -179,13 +179,13 @@ class FillingArticleRepositoryTest extends Enlight_Components_Test_Controller_Te
     }
 
     /**
-     * @param FillingArticleRepository $fillingArticlesRepository
+     * @param FillingArticleSearch $fillingArticlesRepository
      * @param FillingArticleQueryInfos $fillingArticleQueryInfos
      * @param $filtername
      * @return array
      */
     private function productStreams(
-        FillingArticleRepository $fillingArticlesRepository,
+        FillingArticleSearch $fillingArticlesRepository,
         FillingArticleQueryInfos $fillingArticleQueryInfos,
         $filtername
     ) {
@@ -254,13 +254,13 @@ class FillingArticleRepositoryTest extends Enlight_Components_Test_Controller_Te
     }
 
     /**
-     * @param FillingArticleRepository $fillingArticlesRepository
+     * @param FillingArticleSearch $fillingArticlesRepository
      * @param FillingArticleQueryInfos $fillingArticleQueryInfos
      * @param $manufacture
      * @return array
      */
     private function categoryManufacture(
-        FillingArticleRepository $fillingArticlesRepository,
+        FillingArticleSearch $fillingArticlesRepository,
         FillingArticleQueryInfos $fillingArticleQueryInfos
     ) {
         $fillingArticleQueryInfos->addFillingArticles(
@@ -354,7 +354,7 @@ class FillingArticleRepositoryTest extends Enlight_Components_Test_Controller_Te
     /**
      * @param float $shippingcosts
      * @param array $articles
-     * @param FillingArticleRepository $fillingArticlesRepository
+     * @param FillingArticleSearch $fillingArticlesRepository
      * @param array $pluginInfos
      * @param string $filtername
      * @throws NonUniqueResultException
@@ -362,7 +362,7 @@ class FillingArticleRepositoryTest extends Enlight_Components_Test_Controller_Te
     public function filterTest(
         float $shippingcosts,
         array $articles,
-        FillingArticleRepository $fillingArticlesRepository,
+        FillingArticleSearch $fillingArticlesRepository,
         array $pluginInfos,
         string $filtername
     ): void {
@@ -449,7 +449,7 @@ class FillingArticleRepositoryTest extends Enlight_Components_Test_Controller_Te
     }
 
     private function alsoBought(
-        FillingArticleRepository $fillingArticlesRepository,
+        FillingArticleSearch $fillingArticlesRepository,
         FillingArticleQueryInfos $fillingArticleQueryInfos
     ) {
         $pluginInfos = $fillingArticleQueryInfos->getPluginInfos();
@@ -472,7 +472,7 @@ class FillingArticleRepositoryTest extends Enlight_Components_Test_Controller_Te
     }
 
     private function similarArticles(
-        FillingArticleRepository $fillingArticlesRepository,
+        FillingArticleSearch $fillingArticlesRepository,
         FillingArticleQueryInfos $fillingArticleQueryInfos,
         $shippingcosts
     ) {
@@ -508,7 +508,7 @@ class FillingArticleRepositoryTest extends Enlight_Components_Test_Controller_Te
         return $fillingArticles;
     }
 
-    private function sorting($pluginInfos,FillingArticleRepository $fillingArticlesRepository,array $fillingArticles)
+    private function sorting($pluginInfos,FillingArticleSearch $fillingArticlesRepository,array $fillingArticles)
     {
         $fillingArticlesSorted = $fillingArticlesRepository->getSortedFillingArticle($fillingArticles,$pluginInfos);
         if (!empty($fillingArticles))

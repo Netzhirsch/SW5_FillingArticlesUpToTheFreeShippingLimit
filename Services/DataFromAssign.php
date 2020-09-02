@@ -4,7 +4,7 @@
 namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit\Services;
 
 
-class ArticleFromAssign
+class DataFromAssign
 {
 
     public function assignMissingAmountToShippingCostFreeBoarder($sBasket,$sShippingcostsDifference) {

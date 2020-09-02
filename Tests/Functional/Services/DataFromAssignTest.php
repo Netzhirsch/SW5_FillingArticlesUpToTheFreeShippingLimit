@@ -4,17 +4,17 @@ namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit\Tests\Functional\Ser
 
 use Enlight_Components_Test_Controller_TestCase;
 use Enlight_Exception;
-use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Services\ArticleFromAssign;
+use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Services\DataFromAssign;
 use Shopware\Models\Article\Article;
 
-class ArticleFromAssignTest extends Enlight_Components_Test_Controller_TestCase
+class DataFromAssignTest extends Enlight_Components_Test_Controller_TestCase
 {
 
     /**
      * @group article_from_assign
      */
     public function testAssignMissingAmountToShippingCostFreeBoarder(){
-       $articleFromAssign = new ArticleFromAssign();
+       $articleFromAssign = new DataFromAssign();
 
        $return = $articleFromAssign->assignMissingAmountToShippingCostFreeBoarder([],10);
        $this->assertEmpty($return);
@@ -45,7 +45,7 @@ class ArticleFromAssignTest extends Enlight_Components_Test_Controller_TestCase
      */
     public function testGetArticleIdsFromBasket()
     {
-        $articleFromAssign = new ArticleFromAssign();
+        $articleFromAssign = new DataFromAssign();
 
         $articleIDs = $articleFromAssign->getArticleIdsFromBasket([]);
         $this->assertEmpty($articleIDs);
@@ -75,7 +75,7 @@ class ArticleFromAssignTest extends Enlight_Components_Test_Controller_TestCase
     public function testGetSupplierIdsFromBasket()
     {
 
-        $articleFromAssign = new ArticleFromAssign();
+        $articleFromAssign = new DataFromAssign();
         $supplierIdsFromBasket = $articleFromAssign->getSupplierIdsFromBasket([]);
         $this->assertEmpty($supplierIdsFromBasket);
 

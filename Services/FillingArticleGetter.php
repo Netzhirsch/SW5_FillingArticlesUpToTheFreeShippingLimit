@@ -7,16 +7,16 @@ use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Models\FillingArticleQuery
 class FillingArticleGetter
 {
     /**
-     * @var FillingArticleRepository
+     * @var FillingArticleSearch
      */
     private $fillingArticleRepository;
 
     /**
-     * @var ArticleFromAssign
+     * @var DataFromAssign
      */
     private $idFromAssign;
 
-    public function __construct(FillingArticleRepository $fillingArticleRepository,ArticleFromAssign $idFromAssign)
+    public function __construct(FillingArticleSearch $fillingArticleRepository,DataFromAssign $idFromAssign)
     {
         $this->fillingArticleRepository = $fillingArticleRepository;
         $this->idFromAssign = $idFromAssign;
@@ -33,7 +33,30 @@ class FillingArticleGetter
         if (empty($sBasket))
             return [];
 
-        //********* shopware 5.2 save names in excludedArticles *******************************************************/
+        $fillingArticleQueryInfos
+            = $this->createFillingArticleQueryInfos($pluginInfos,$sShippingcostsDifference,$sBasket);
+
+        $fillingArticleQueryInfos = $this->CollectFillingArticle($fillingArticleQueryInfos);
+
+        $fillingArticles = $this->cutFillingArticlesToMaxSize($fillingArticleQueryInfos, $pluginInfos);
+
+        $fillingArticles
+            = $this->fillingArticleRepository->getSortedFillingArticle($fillingArticles,$pluginInfos);
+
+        return $fillingArticles;
+    }
+
+    /**
+     * @param $pluginInfos
+     * @param $sShippingcostsDifference
+     * @param $sBasket
+     * @return FillingArticleQueryInfos
+     */
+    private function createFillingArticleQueryInfos(
+        $pluginInfos,$sShippingcostsDifference,$sBasket
+    ): FillingArticleQueryInfos
+    {
+        //********* shopware 5.2 save names in excludedArticles 5.6 id ************************************************/
         $excludedArticlesByNames = [];
         $excludedArticlesByIds = [];
         //********* exlude articles by plugin setting *****************************************************************/
@@ -47,9 +70,7 @@ class FillingArticleGetter
             }
         }
 
-        $fillingArticleRepository = $this->fillingArticleRepository;
-
-        $fillingArticleQueryInfos = new FillingArticleQueryInfos(
+        return new FillingArticleQueryInfos(
             $pluginInfos,
             $sShippingcostsDifference,
             $this->idFromAssign->getSupplierIdsFromBasket($sBasket),
@@ -58,43 +79,70 @@ class FillingArticleGetter
             $excludedArticlesByNames,
             []
         );
+    }
+
+    /**
+     * @param FillingArticleQueryInfos $fillingArticleQueryInfos
+     * @return FillingArticleQueryInfos
+     */
+    private function CollectFillingArticle(FillingArticleQueryInfos $fillingArticleQueryInfos): FillingArticleQueryInfos
+    {
+        $fillingArticleRepository = $this->fillingArticleRepository;
 
         $fillingArticleQueryInfos
-            ->addFillingArticles($fillingArticleRepository
-                ->getFillingArticlesFromAccessories($fillingArticleQueryInfos)
+            ->addFillingArticles(
+                $fillingArticleRepository
+                    ->getFillingArticlesFromAccessories($fillingArticleQueryInfos)
             );
 
         $fillingArticleQueryInfos
-            ->addFillingArticles($fillingArticleRepository
-                ->getFillingArticlesFromSimilar($fillingArticleQueryInfos)
+            ->addFillingArticles(
+                $fillingArticleRepository
+                    ->getFillingArticlesFromSimilar($fillingArticleQueryInfos)
             );
 
         $fillingArticleQueryInfos
-            ->addFillingArticles($fillingArticleRepository
-                ->getFillingArticlesFromTopseller($fillingArticleQueryInfos)
+            ->addFillingArticles(
+                $fillingArticleRepository
+                    ->getFillingArticlesFromTopseller($fillingArticleQueryInfos)
             );
 
         $fillingArticleQueryInfos
-            ->addFillingArticles($fillingArticleRepository
-                ->getFillingArticlesFromProductStreams($fillingArticleQueryInfos)
+            ->addFillingArticles(
+                $fillingArticleRepository
+                    ->getFillingArticlesFromProductStreams($fillingArticleQueryInfos)
             );
 
         $fillingArticleQueryInfos
-            ->addFillingArticles($fillingArticleRepository
-                ->getFillingArticlesFromAlsoBought($fillingArticleQueryInfos)
+            ->addFillingArticles(
+                $fillingArticleRepository
+                    ->getFillingArticlesFromAlsoBought($fillingArticleQueryInfos)
             );
 
         $fillingArticleQueryInfos
-            ->addFillingArticles($fillingArticleRepository
-                ->getFillingArticlesFromCategoryManufacture($fillingArticleQueryInfos)
+            ->addFillingArticles(
+                $fillingArticleRepository
+                    ->getFillingArticlesFromCategoryManufacture($fillingArticleQueryInfos)
             );
 
-        $fillingArticles = array_slice($fillingArticleQueryInfos->getFillingArticles(), 0, $pluginInfos['maxArticle']);
-        //********* sorting ****************************************************************************************/
-        $fillingArticles
-            = $fillingArticleRepository->getSortedFillingArticle($fillingArticles,$pluginInfos);
+        return $fillingArticleQueryInfos;
+    }
 
-        return $fillingArticles;
+    /**
+     * @param FillingArticleQueryInfos $fillingArticleQueryInfos
+     * @param $pluginInfos
+     * @return array
+     */
+    private function cutFillingArticlesToMaxSize(
+        FillingArticleQueryInfos $fillingArticleQueryInfos,
+        $pluginInfos
+    ): array {
+
+        return array_slice(
+            $fillingArticleQueryInfos->getFillingArticles(),
+            0,
+            $pluginInfos['maxArticle']
+        );
     }
 
 

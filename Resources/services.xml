@@ -18,7 +18,7 @@
             <argument type="service" id="snippets"/>
             <argument type="service" id="shopware_storefront.context_service"/>
             <argument type="service"
-                      id="netzhirsch_filling_articles_up_to_the_free_shipping_limit.services.article_from_assign"/>
+                      id="netzhirsch_filling_articles_up_to_the_free_shipping_limit.services.data_from_assign"/>
         </service>
 
         <service
@@ -32,27 +32,27 @@
             />
             <argument
                     type="service"
-                    id="netzhirsch_filling_articles_up_to_the_free_shipping_limit.services.article_from_assign"
+                    id="netzhirsch_filling_articles_up_to_the_free_shipping_limit.services.data_from_assign"
             />
         </service>
 
         <service
-                class="NetzhirschFillingArticlesUpToTheFreeShippingLimit\Services\FillingArticleRepository"
+                class="NetzhirschFillingArticlesUpToTheFreeShippingLimit\Services\FillingArticleSearch"
                 id="netzhirsch_filling_articles_up_to_the_free_shipping_limit.services.filling_article_repository"
         >
             <argument type="service" id="shopware_search.variant_search"/>
             <argument type="service" id="legacy_struct_converter"/>
             <argument type="service" id="models"/>
             <argument type="service" id="shopware_product_stream.repository"/>
-            <argument type="service" id="netzhirsch_filling_articles_up_to_the_free_shipping_limit.services.article_from_assign"/>
+            <argument type="service" id="netzhirsch_filling_articles_up_to_the_free_shipping_limit.services.data_from_assign"/>
             <argument type="service" id="shopware_storefront.context_service"/>
             <argument type="service" id="shopware_product_stream.criteria_factory"/>
             <argument type="service" id="config"/>
         </service>
 
         <service
-                class="NetzhirschFillingArticlesUpToTheFreeShippingLimit\Services\ArticleFromAssign"
-                id="netzhirsch_filling_articles_up_to_the_free_shipping_limit.services.article_from_assign"
+                class="NetzhirschFillingArticlesUpToTheFreeShippingLimit\Services\DataFromAssign"
+                id="netzhirsch_filling_articles_up_to_the_free_shipping_limit.services.data_from_assign"
         >
         </service>
 

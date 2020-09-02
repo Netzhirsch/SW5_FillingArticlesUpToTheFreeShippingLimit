@@ -32,7 +32,7 @@ class FillingArticleGetterTest extends Enlight_Components_Test_Controller_TestCa
             ->from(Article::class,'article')
             ->getQuery()
             ->getResult();
-        $pluginInfos = FillingArticleRepositoryTest::getDefaultConfig();
+        $pluginInfos = FillingArticleSearchTest::getDefaultConfig();
         Shopware()->Container()->get('request_stack')->push($this->__get('request'));
         $expectedArticleAmount = [
             0 => 4,

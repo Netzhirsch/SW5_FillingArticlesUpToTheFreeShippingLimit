@@ -4,8 +4,6 @@
 namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit\Services;
 
 
-use Doctrine\DBAL\Connection;
-use Doctrine\DBAL\Driver\ResultStatement;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Models\FillingArticleQueryInfos;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\CombineContion;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\MaxOverhangCondition;
@@ -13,12 +11,14 @@ use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condit
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\NotInArticleNamesCondition;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\SeparatelyCondition;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Sorting\VoteSorting;
+use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Repository\Repository;
 use Shopware\Bundle\SearchBundle\Condition\CategoryCondition;
 use Shopware\Bundle\SearchBundle\Condition\CombinedCondition;
 use Shopware\Bundle\SearchBundle\Condition\ManufacturerCondition;
 use Shopware\Bundle\SearchBundle\Condition\OrdernumberCondition;
 use Shopware\Bundle\SearchBundle\Condition\PriceCondition;
 use Shopware\Bundle\SearchBundle\Condition\ProductIdCondition;
+use Shopware\Bundle\SearchBundle\Criteria;
 use Shopware\Bundle\SearchBundle\Sorting\PopularitySorting;
 use Shopware\Bundle\SearchBundle\Sorting\PriceSorting;
 use Shopware\Bundle\SearchBundle\Sorting\ProductStockSorting;
@@ -31,11 +31,10 @@ use Shopware\Components\Compatibility\LegacyStructConverter;
 use Shopware\Components\Model\ModelManager;
 use Shopware\Components\ProductStream\CriteriaFactory;
 use Shopware\Components\ProductStream\RepositoryInterface;
-use Shopware\Models\Category\Category;
 use Shopware\Models\ProductStream\ProductStream;
 use Shopware_Components_Config;
 
-class FillingArticleRepository
+class FillingArticleSearch
 {
 
     /**
@@ -59,7 +58,7 @@ class FillingArticleRepository
     private $repositoryInterface;
 
     /**
-     * @var ArticleFromAssign
+     * @var DataFromAssign
      */
     private $idFromAssign;
 
@@ -83,7 +82,7 @@ class FillingArticleRepository
         LegacyStructConverter $legacyStructConverter,
         ModelManager $modelManager,
         RepositoryInterface $repositoryInterface,
-        ArticleFromAssign $idFromAssign,
+        DataFromAssign $idFromAssign,
         ContextService $contextService,
         CriteriaFactory $criteriaFactory,
         Shopware_Components_Config $config
@@ -138,36 +137,18 @@ class FillingArticleRepository
         if (empty($pluginInfos['similarArticles']))
             return $fillingArticles;
 
-        $query = $this->modelManager->getDBALQueryBuilder();
-        $query->select('similar.relatedarticle')
-            ->from('s_articles_similar', 'similar')
-            ->innerJoin('similar', 's_articles', 'product', 'product.id = similar.articleID')
-            ->innerJoin(
-                'similar',
-                's_articles',
-                'similarArticles',
-                'similarArticles.id = similar.relatedArticle'
-            )
-            ->innerJoin('similarArticles',
-                's_articles_details',
-                'similarVariant',
-                'similarVariant.id = similarArticles.main_detail_id'
-            )
-            ->where('product.id IN (:ids)')
-            ->setParameter(
-                ':ids',
-                $fillingArticleQueryInfos->getArticleIdsFromBasket(),
-                Connection::PARAM_INT_ARRAY
-            );
+        $repository = new Repository();
 
-        /** @var ResultStatement $statement */
-        $statement = $query->execute();
+        $similarIds
+            = $repository->getRelatedarticleId(
+                $this->modelManager->getDBALQueryBuilder(),$fillingArticleQueryInfos->getArticleIdsFromBasket()
+        );
 
-        $similarIds = $statement->fetch();
         //********* set condition criteria ****************************************************************************/
         $return = $this->createContextAndConditionCriteria(
             $fillingArticleQueryInfos
         );
+
         if (empty($return))
             return $fillingArticles;
 
@@ -217,6 +198,7 @@ class FillingArticleRepository
             $criteria,$return['context'],$fillingArticleQueryInfos->getFillingArticles()
         );
     }
+
     public function getFillingArticlesFromAccessories(
         FillingArticleQueryInfos $fillingArticleQueryInfos
     )
@@ -225,19 +207,14 @@ class FillingArticleRepository
         if (empty($pluginInfos['accessories']))
             return [];
 
-        $articlesInBasketIdsString = implode(',',$fillingArticleQueryInfos->getArticleIdsFromBasket());
-        // default query
-        $sql = "
-        SELECT relationships.relatedarticle
-        FROM
-            s_articles_relationships relationships
-        LEFT JOIN
-            s_articles articles ON articles.id = relationships.articleID
-        WHERE relationships.relatedarticle NOT IN ('$articlesInBasketIdsString')
-        AND relationships.articleID IN ('$articlesInBasketIdsString')
-        ";
 
-        $relatedarticleIdsAssoc = $this->modelManager->getConnection()->fetchAll($sql);
+        $repository = new Repository();
+        $relatedarticleIdsAssoc
+            = $repository->getAccessoriesIds(
+                implode(',',$fillingArticleQueryInfos->getArticleIdsFromBasket()),
+                $this->modelManager->getConnection()
+        );
+
         $relatedarticleIdsArray = [];
         foreach ($relatedarticleIdsAssoc as $relatedarticleId) {
             $relatedarticleIdsArray[] = $relatedarticleId['relatedarticle'];
@@ -271,20 +248,12 @@ class FillingArticleRepository
         if (empty($pluginInfos['productStream']))
             return $fillingArticleQueryInfos->getFillingArticles();
 
-
-
-        //********* get product stream model by name from plugin config ***************************************************/
+        $repository = new Repository();
         /** @var ProductStream[] $productSteams */
-        $qb = $this->modelManager->createQueryBuilder();
-        $productSteams = $qb
-            ->select('productStream')
-            ->from(ProductStream::class,'productStream')
-            ->where('productStream.name IN (:productStreamsIds)')
-            ->setParameter('productStreamsIds',$pluginInfos['productStream'])
-            ->getQuery()
-            ->getResult();
+        $productSteams = $repository->getProductSteam(
+            $this->modelManager->createQueryBuilder(),$pluginInfos['productStream']
+        );
 
-            //********* get filling articles from product streams *****************************************************/
         $fillingArticles = $fillingArticleQueryInfos->getFillingArticles();
         if (!empty($productSteams)) {
 
@@ -399,17 +368,7 @@ class FillingArticleRepository
         } else {
             $criteria->addBaseCondition(new NotInArticleNamesCondition($articlesInBasketNames));
         }
-
-        //********* price condition ***********************************************************************************/
-        $minimumArticlePrice = ($pluginInfos['minimumArticlePrice'] ? $pluginInfos['minimumArticlePrice'] : 0.00);
-        if ($pluginInfos['minimumArticlePriceUnit'] == '%')
-            $minimumArticlePrice = $sShippingcostsDifference / 100 * $minimumArticlePrice;
-
-        $maximumArticlePrice = ($pluginInfos['maximumArticlePrice'] ? $pluginInfos['maximumArticlePrice'] : 0.00);
-        if ($pluginInfos['maximumArticlePriceUnit'] == '%')
-            $maximumArticlePrice = $sShippingcostsDifference / 100 * $maximumArticlePrice;
-
-        $criteria->addCondition(new PriceCondition($minimumArticlePrice, $maximumArticlePrice));
+        $this->addPriceCondition($pluginInfos, $sShippingcostsDifference, $criteria);
 
         //********* combine condition *********************************************************************************/
         if (!$pluginInfos['isCombineAllowed'])
@@ -431,14 +390,8 @@ class FillingArticleRepository
 
     public function getCategoryIdsFromArticleIds($articleIDs)
     {
-        $qb = $this->modelManager->createQueryBuilder();
-        $qb->select('category.id')
-            ->from(Category::class,'category')
-            ->leftJoin('category.articles','article')
-            ->where('article.id IN (:articleIDs)')
-            ->setParameter('articleIDs',$articleIDs);
+        $categoriesIds = (new Repository())->getCategoriesIds($this->modelManager->createQueryBuilder(),$articleIDs);
 
-        $categoriesIds = $qb->getQuery()->getResult();
         $categoriesIdsWithoutAssoc = [];
         foreach ($categoriesIds as $categoriesId) {
             $categoriesIdsWithoutAssoc[] = $categoriesId['id'];
@@ -475,34 +428,7 @@ class FillingArticleRepository
         $criteria->addCondition(new OrdernumberCondition($ordernumbers));
 
         //********* second sorting ************************************************************************************/
-        if (!empty($pluginInfos['sorting'])) {
-            switch($pluginInfos['sorting']) {
-                case 'randomly':
-                    $criteria->addSorting(new RandomSorting(SortingInterface::SORT_DESC));
-                    break;
-                case 'price ascending':
-                    $criteria->addSorting(new PriceSorting(SortingInterface::SORT_ASC));
-                    break;
-                case 'price descending':
-                    $criteria->addSorting(new PriceSorting(SortingInterface::SORT_DESC));
-                    break;
-                case 'votes descending':
-                    $criteria->addSorting(new VoteSorting(SortingInterface::SORT_DESC));
-                    break;
-                case 'stock ascending':
-                    $criteria->addSorting(new ProductStockSorting(SortingInterface::SORT_ASC));
-                    break;
-                case 'stock descending':
-                    $criteria->addSorting(new ProductStockSorting(SortingInterface::SORT_DESC));
-                    break;
-                case 'popularity ascending':
-                    $criteria->addSorting(new PopularitySorting(SortingInterface::SORT_ASC));
-                    break;
-                case 'popularity descending':
-                    $criteria->addSorting(new PopularitySorting(SortingInterface::SORT_DESC));
-                    break;
-            }
-        }
+        $this->addSortingToCriteria($pluginInfos, $criteria);
 
         //********* find produt models ********************************************************************************/
         $variantSearch = $this->variantSearch;
@@ -544,5 +470,61 @@ class FillingArticleRepository
             return $fillingArticles;
 
         return $productsStructs;
+    }
+
+    /**
+     * @param array $pluginInfos
+     * @param Criteria $criteria
+     */
+    private function addSortingToCriteria(array $pluginInfos, Criteria $criteria): void
+    {
+        if (!empty($pluginInfos['sorting'])) {
+            switch ($pluginInfos['sorting']) {
+                case 'randomly':
+                    $criteria->addSorting(new RandomSorting(SortingInterface::SORT_DESC));
+                    break;
+                case 'price ascending':
+                    $criteria->addSorting(new PriceSorting(SortingInterface::SORT_ASC));
+                    break;
+                case 'price descending':
+                    $criteria->addSorting(new PriceSorting(SortingInterface::SORT_DESC));
+                    break;
+                case 'votes descending':
+                    $criteria->addSorting(new VoteSorting(SortingInterface::SORT_DESC));
+                    break;
+                case 'stock ascending':
+                    $criteria->addSorting(new ProductStockSorting(SortingInterface::SORT_ASC));
+                    break;
+                case 'stock descending':
+                    $criteria->addSorting(new ProductStockSorting(SortingInterface::SORT_DESC));
+                    break;
+                case 'popularity ascending':
+                    $criteria->addSorting(new PopularitySorting(SortingInterface::SORT_ASC));
+                    break;
+                case 'popularity descending':
+                    $criteria->addSorting(new PopularitySorting(SortingInterface::SORT_DESC));
+                    break;
+            }
+        }
+    }
+
+    /**
+     * @param array $pluginInfos
+     * @param float $sShippingcostsDifference
+     * @param Criteria $criteria
+     */
+    private function addPriceCondition(array $pluginInfos, float $sShippingcostsDifference, Criteria $criteria): void
+    {
+        $minimumArticlePrice = ($pluginInfos['minimumArticlePrice'] ? $pluginInfos['minimumArticlePrice'] : 0.00);
+        if ($pluginInfos['minimumArticlePriceUnit'] == '%') {
+            $minimumArticlePrice = $sShippingcostsDifference / 100 * $minimumArticlePrice;
+        }
+
+        $maximumArticlePrice = ($pluginInfos['maximumArticlePrice'] ? $pluginInfos['maximumArticlePrice'] : 0.00);
+        if ($pluginInfos['maximumArticlePriceUnit'] == '%') {
+            $maximumArticlePrice = $sShippingcostsDifference / 100 * $maximumArticlePrice;
+        }
+
+        $criteria->addCondition(new PriceCondition($minimumArticlePrice, $maximumArticlePrice));
     }
 }
