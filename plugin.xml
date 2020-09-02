@@ -4,6 +4,8 @@
     <label>filling articles up to the free shipping limit</label>
     <label lang="de">Füllartikel bis zur Versandkosten-Freigrenze</label>
     <version>0.0.1</version>
+    <compatibility minVersion="5.4.6" maxVersion="5.6">
+    </compatibility>
     <description>
         <![CDATA[
         In the shopping cart, a slider with articles is displayed,
