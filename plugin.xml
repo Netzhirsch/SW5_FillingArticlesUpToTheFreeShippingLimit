@@ -4,8 +4,11 @@
     <label>filling articles up to the free shipping limit</label>
     <label lang="de">Füllartikel bis zur Versandkosten-Freigrenze</label>
     <version>0.0.1</version>
-    <compatibility minVersion="5.4.6" maxVersion="5.7">
-    </compatibility>
+    <compatibility minVersion="5.4.6" maxVersion="5.7" />
+    <copyright>(c) by netzhirsch Gbr</copyright>
+    <license>MIT</license>
+    <link>https://netzhirsch.de</link>
+    <author>Netzhirsch Gbr</author>
     <description>
         <![CDATA[
         In the shopping cart, a slider with articles is displayed,
@@ -47,10 +50,10 @@
         <![CDATA[
         Im Warenkorb wird ein Slider mit Artikel angezeigt
         , mit dessen Hilfe die Versandkosten-Freigrenze erreicht werden kann.<br>
-        Unter dem Hinweis zur Versandkosten-Freigrenze kann ein Hinweis auf diesen Slider angezeigt werden.
-        In diesem Hinweis ist ein Link integriert,
+        Unter dem Hinweis zur Versandkosten-Freigrenze kann eine Andeutung auf diesen Slider angezeigt werden.
+        In dieser Andeutung ist ein Link integriert,
         der wahlweise zum Slider scrollt oder ein Popup mit Slider einblendet.
-        Der Hinweistext kann über die Textbausteine editiert werden, wie auch der Titel des Sliders.<br>
+        Der Hinweistext kann über die Textbausteine editiert werden, sowie auch der Titel des Sliders.<br>
         Die Artikel im Slider können aus folgenden Gruppen gebildet werden:
         <ul>
             <li>Top Seller</li>
