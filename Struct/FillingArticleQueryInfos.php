@@ -1,6 +1,6 @@
 <?php
 
-namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit\Models;
+namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit\Struct;
 
 class FillingArticleQueryInfos
 {

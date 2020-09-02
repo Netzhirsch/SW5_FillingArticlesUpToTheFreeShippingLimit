@@ -2,7 +2,7 @@
 
 namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit\Services;
 
-use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Models\FillingArticleQueryInfos;
+use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Struct\FillingArticleQueryInfos;
 
 class FillingArticleGetter
 {
