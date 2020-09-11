@@ -54,7 +54,7 @@ class FillingArticleGetter
      */
     private function createFillingArticleQueryInfos(
         $pluginInfos,$sShippingcostsDifference,$sBasket
-    ): FillingArticleQueryInfos
+    )
     {
         //********* shopware 5.2 save names in excludedArticles 5.6 ids ************************************************/
         $excludedArticlesByNames = [];
@@ -85,7 +85,7 @@ class FillingArticleGetter
      * @param FillingArticleQueryInfos $fillingArticleQueryInfos
      * @return FillingArticleQueryInfos
      */
-    private function CollectFillingArticle(FillingArticleQueryInfos $fillingArticleQueryInfos): FillingArticleQueryInfos
+    private function CollectFillingArticle(FillingArticleQueryInfos $fillingArticleQueryInfos)
     {
         $fillingArticleRepository = $this->fillingArticleRepository;
 
@@ -136,7 +136,7 @@ class FillingArticleGetter
     private function cutFillingArticlesToMaxSize(
         FillingArticleQueryInfos $fillingArticleQueryInfos,
         $pluginInfos
-    ): array {
+    ) {
 
         return array_slice(
             $fillingArticleQueryInfos->getFillingArticles(),

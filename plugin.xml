@@ -4,19 +4,19 @@
     <label>filling articles up to the free shipping limit</label>
     <label lang="de">Füllartikel bis zur Versandkosten-Freigrenze</label>
     <version>1.0.0</version>
-    <compatibility minVersion="5.4" maxVersion="5.7" />
+    <compatibility minVersion="5.4.0" />
     <copyright>(c) by Netzhirsch GbR</copyright>
     <license>proprietary</license>
     <link>https://www.netzhirsch.de</link>
     <author>Netzhirsch GbR</author>
     <description>
         <![CDATA[
-        In the shopping cart, a slider with articles is displayed,
+        <p>In the shopping cart, a slider with articles is displayed,
         which can be used to reach the free shipping limit.<br>
         Under the note about the shipping cost exemption limit, a note about this slider can be displayed.
         In this hint a link is integrated, which either scrolls to the slider or displays a popup with the slider.
-        The text of the hint can be edited using the text modules, as well as the title of the slider.
-        The articles in the slider can be formed from the following groups.
+        The text of the hint can be edited using the text modules, as well as the title of the slider.</p>
+        <p>The articles in the slider can be formed from the following groups.</p>
         <ul>
             <li>topseller</li>
             <li>product stream</li>
@@ -25,7 +25,7 @@
             <li>similar article</li>
             <li>accessories</li>
         </ul>
-        These items can be limited with the following options:
+        <p>These items can be limited with the following options:</p>
         <ul>
             <li>Maximum number of articles in the slider</li>
             <li>Combinations (Also show articles that do not reach the free shipping limit.)</li>
@@ -34,6 +34,7 @@
             <li>Exclude article</li>
             <li>Exclude variant groups</li>
         </ul>
+        <p>The articles can be sorted as follows:</p>
         <ul>
             <li>Randomly</li>
             <li>Price ascending</li>
@@ -87,7 +88,7 @@
         ]]>
     </description>
     <changelog version="1.0.0">
-        <changes lang="de">Erstveröffentlichung.</changes>
-        <changes>Initial release.</changes>
+        <changes lang="de">Erstveröffentlichung</changes>
+        <changes>Initial release</changes>
     </changelog>
 </plugin>

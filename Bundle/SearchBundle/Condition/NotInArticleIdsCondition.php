@@ -7,7 +7,7 @@ use Shopware\Bundle\SearchBundle\ConditionInterface;
 
 class NotInArticleIdsCondition implements ConditionInterface, JsonSerializable
 {
-    private const NAME = 'productids';
+    const NAME = 'productids';
 
     /**
      * @var int[]

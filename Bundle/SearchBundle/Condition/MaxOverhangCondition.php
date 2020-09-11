@@ -6,7 +6,7 @@ use Shopware\Bundle\SearchBundle\ConditionInterface;
 
 class MaxOverhangCondition implements ConditionInterface
 {
-    private const NAME = 'data';
+    const NAME = 'data';
 
     protected $data;
 

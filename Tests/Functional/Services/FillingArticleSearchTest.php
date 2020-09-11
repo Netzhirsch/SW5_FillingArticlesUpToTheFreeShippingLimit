@@ -4,6 +4,7 @@ namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit\Tests\Functional\Ser
 
 use Doctrine\ORM\NonUniqueResultException;
 use Enlight_Components_Test_Controller_TestCase;
+use Enlight_Exception;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Struct\FillingArticleQueryInfos;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Services\FillingArticleSearch;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Tests\Functional\Sorting;
@@ -16,7 +17,7 @@ class FillingArticleSearchTest extends Enlight_Components_Test_Controller_TestCa
     /**
      * @group repository
      * @throws NonUniqueResultException
-     * @throws \Enlight_Exception
+     * @throws Enlight_Exception
      */
     public function testFillingArticlesRepository()
     {
@@ -257,7 +258,6 @@ class FillingArticleSearchTest extends Enlight_Components_Test_Controller_TestCa
     /**
      * @param FillingArticleSearch $fillingArticlesRepository
      * @param FillingArticleQueryInfos $fillingArticleQueryInfos
-     * @param $manufacture
      * @return array
      */
     private function categoryManufacture(
@@ -358,7 +358,6 @@ class FillingArticleSearchTest extends Enlight_Components_Test_Controller_TestCa
      * @param FillingArticleSearch $fillingArticlesRepository
      * @param array $pluginInfos
      * @param string $filtername
-     * @throws NonUniqueResultException
      */
     public function filterTest(
         float $shippingcosts,
@@ -366,7 +365,7 @@ class FillingArticleSearchTest extends Enlight_Components_Test_Controller_TestCa
         FillingArticleSearch $fillingArticlesRepository,
         array $pluginInfos,
         string $filtername
-    ): void {
+    ) {
         foreach ($articles as $article) {
 
             if ($article->getMainDetail()->getShippingFree()) {

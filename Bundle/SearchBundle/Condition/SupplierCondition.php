@@ -8,7 +8,7 @@ use Shopware\Bundle\SearchBundle\ConditionInterface;
 
 class SupplierCondition implements ConditionInterface, JsonSerializable
 {
-    private const NAME = 'data';
+    const NAME = 'data';
 
     protected $data;
 

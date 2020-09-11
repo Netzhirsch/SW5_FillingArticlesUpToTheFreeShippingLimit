@@ -292,6 +292,7 @@ class FillingArticleSearch
         FillingArticleQueryInfos $fillingArticleQueryInfos
     )
     {
+        $pluginInfos = $fillingArticleQueryInfos->getPluginInfos();
         if (empty(trim($pluginInfos['consider'])))
             return $fillingArticleQueryInfos->getFillingArticles();
 
@@ -477,7 +478,7 @@ class FillingArticleSearch
      * @param array $pluginInfos
      * @param Criteria $criteria
      */
-    private function addSortingToCriteria(array $pluginInfos, Criteria $criteria): void
+    private function addSortingToCriteria(array $pluginInfos, Criteria $criteria)
     {
         if (!empty($pluginInfos['sorting'])) {
             switch ($pluginInfos['sorting']) {
@@ -514,7 +515,7 @@ class FillingArticleSearch
      * @param float $sShippingcostsDifference
      * @param Criteria $criteria
      */
-    private function addPriceCondition(array $pluginInfos, float $sShippingcostsDifference, Criteria $criteria): void
+    private function addPriceCondition(array $pluginInfos, float $sShippingcostsDifference, Criteria $criteria)
     {
         $minimumArticlePrice = ($pluginInfos['minimumArticlePrice'] ? $pluginInfos['minimumArticlePrice'] : 0.00);
         if ($pluginInfos['minimumArticlePriceUnit'] == '%') {

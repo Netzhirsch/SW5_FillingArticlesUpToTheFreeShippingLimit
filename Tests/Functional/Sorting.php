@@ -87,7 +87,6 @@ class Sorting extends Enlight_Components_Test_Controller_TestCase
                 ->where('product.id = :productId')
                 ->setParameter('productId',$fillingArticle['articleID'])
                 ->execute()->fetchColumn();
-            ;
             if (!isset($before)) {
                 $before = $sales;
             }
@@ -169,7 +168,7 @@ class Sorting extends Enlight_Components_Test_Controller_TestCase
         $pluginInfos,
         $fillingArticlesUnsorted,
         $articleIndex
-    ): void {
+    ) {
         $fillingArticlesSorted = $fillingArticlesRepository->getSortedFillingArticle($fillingArticles, $pluginInfos);
         if (!empty($fillingArticlesUnsorted)) {
             $this->assertNotEmpty($fillingArticlesSorted);

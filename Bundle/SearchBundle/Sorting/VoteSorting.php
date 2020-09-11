@@ -6,5 +6,5 @@ use Shopware\Bundle\SearchBundle\Sorting\Sorting;
 
 class VoteSorting extends Sorting
 {
-    protected const NAME = 'votes';
+    const NAME = 'votes';
 }

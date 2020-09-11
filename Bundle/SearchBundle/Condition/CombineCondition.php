@@ -6,7 +6,7 @@ use Shopware\Bundle\SearchBundle\ConditionInterface;
 
 class CombineCondition implements ConditionInterface
 {
-    private const NAME = 'sShippingcostsDifference';
+    const NAME = 'sShippingcostsDifference';
 
     protected $sShippingcostsDifference;
 

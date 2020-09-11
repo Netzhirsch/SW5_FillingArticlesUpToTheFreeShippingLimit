@@ -7,7 +7,7 @@ use Shopware\Bundle\SearchBundle\ConditionInterface;
 
 class SeparatelyCondition implements ConditionInterface, JsonSerializable
 {
-    private const NAME = 'data';
+    const NAME = 'data';
 
     protected $data;
 
