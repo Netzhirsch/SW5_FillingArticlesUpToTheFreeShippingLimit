@@ -49,17 +49,18 @@ class FillingArticleGetterTest extends Enlight_Components_Test_Controller_TestCa
             11 => 5,
             12 => 5,
             13 => 4,
-            14 => 4,
+            14 => 5,
+            15 => 5,
         ];
         $this->assertFillingArticleCount($pluginInfos,$expectedArticleAmount,$articles,$fillingArticlesGetter,'default');
 
         $pluginInfos['topSeller'] = null;
-        $expectedArticleAmount = array_fill(0,14,0);
+        $expectedArticleAmount = array_fill(0,16,0);
         $this->assertFillingArticleCount($pluginInfos,$expectedArticleAmount,$articles,$fillingArticlesGetter,'kein filter');
         $pluginInfos['topSeller'] = true;
 
         $pluginInfos['maxArticle'] = 5;
-        $expectedArticleAmount = array_fill(0,14,5);
+        $expectedArticleAmount = array_fill(0,16,5);
         $expectedArticleAmount[0] = 4;
         $this->assertFillingArticleCount($pluginInfos,$expectedArticleAmount,$articles,$fillingArticlesGetter,'maxArtikel');
         $pluginInfos['maxArticle'] = 20;

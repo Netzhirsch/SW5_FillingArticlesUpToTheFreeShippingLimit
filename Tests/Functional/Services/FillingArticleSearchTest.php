@@ -6,6 +6,7 @@ use Doctrine\ORM\NonUniqueResultException;
 use Enlight_Components_Test_Controller_TestCase;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Struct\FillingArticleQueryInfos;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Services\FillingArticleSearch;
+use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Tests\Functional\Sorting;
 use Shopware\Bundle\SearchBundle\Criteria;
 use Shopware\Models\Article\Article;
 
@@ -439,10 +440,8 @@ class FillingArticleSearchTest extends Enlight_Components_Test_Controller_TestCa
                 );
                 $fillingArticles = $fillingArticleQueryInfos->getFillingArticles();
                 if (!empty($fillingArticles)) {
-                    $pluginInfos['sorting'] = 'price ascending';
-                    $this->sorting($pluginInfos,$fillingArticlesRepository,$fillingArticles);
-                    $pluginInfos['sorting'] = 'price descending';
-                    $this->sorting($pluginInfos,$fillingArticlesRepository,$fillingArticles);
+                    $sortingTest = new Sorting();
+                    $sortingTest->sorting($pluginInfos,$fillingArticlesRepository,$fillingArticles);
                 }
             }
         }
@@ -506,33 +505,5 @@ class FillingArticleSearchTest extends Enlight_Components_Test_Controller_TestCa
             }
         }
         return $fillingArticles;
-    }
-
-    private function sorting($pluginInfos,FillingArticleSearch $fillingArticlesRepository,array $fillingArticles)
-    {
-        $fillingArticlesSorted = $fillingArticlesRepository->getSortedFillingArticle($fillingArticles,$pluginInfos);
-        if (!empty($fillingArticles))
-            $this->assertNotEmpty($fillingArticlesSorted);
-
-        switch ($pluginInfos['sorting']) {
-            case 'price ascending':
-                foreach ($fillingArticlesSorted as $fillingArticle) {
-                    if (!isset($price)) {
-                        $price = $fillingArticle['price_numeric'];
-                    }
-                    $this->assertTrue($price <= $fillingArticle['price_numeric'],'aktueller Preis: '.$fillingArticle['price_numeric'].' preis davor: '.$price);
-                    $price = $fillingArticle['price_numeric'];
-                }
-                break;
-            case 'price descending':
-                foreach ($fillingArticlesSorted as $fillingArticle) {
-                    if (!isset($price)) {
-                        $price = $fillingArticle['price_numeric'];
-                    }
-                    $this->assertTrue($price >= $fillingArticle['price_numeric'],'aktueller Preis: '.$fillingArticle['price_numeric'].'preis davor'.$price);
-                    $price = $fillingArticle['price_numeric'];
-                }
-                break;
-        }
     }
 }
