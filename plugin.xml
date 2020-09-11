@@ -48,7 +48,7 @@
     </description>
     <description lang="de">
         <![CDATA[
-        Im Warenkorb wird ein Slider mit Artikel angezeigt
+        Im Warenkorb wird ein Slider mit Artikeln angezeigt
         , mit dessen Hilfe die Versandkosten-Freigrenze erreicht werden kann.<br>
         Unter dem Hinweis zur Versandkosten-Freigrenze kann eine Andeutung auf diesen Slider angezeigt werden.
         In dieser Andeutung ist ein Link integriert,
@@ -63,7 +63,7 @@
             <li>Ähnliche Artikel</li>
             <li>Zubehör</li>
         </ul>
-        Diese Artikel können mit folgenden Optionen beschränkt werden:
+        Diese Artikel können durch folgende Optionen beschränkt werden:
         <ul>
             <li>Maximale Artikel-Anzahl im Slider</li>
             <li>Kombinationen (Auch Artikel anzeigen, die alleine nicht die Versandkosten-Freigrenze erreichen.)</li>
@@ -86,10 +86,6 @@
         </ul>
         ]]>
     </description>
-    <copyright>(c) by Netzhirsch GbR</copyright>
-    <license>MIT</license>
-    <link>https://netzhirsch.de</link>
-    <author>Netzhirsch GbR</author>
     <changelog version="1.0.0">
         <changes lang="de">Erstveröffentlichung.</changes>
         <changes>Initial release.</changes>
