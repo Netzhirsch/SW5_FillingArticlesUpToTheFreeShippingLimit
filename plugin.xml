@@ -4,7 +4,7 @@
     <label>filling articles up to the free shipping limit</label>
     <label lang="de">Füllartikel bis zur Versandkosten-Freigrenze</label>
     <version>1.0.0</version>
-    <compatibility minVersion="5.2" maxVersion="5.7" />
+    <compatibility minVersion="5.4" maxVersion="5.7" />
     <copyright>(c) by netzhirsch Gbr</copyright>
     <license>MIT</license>
     <link>https://netzhirsch.de</link>
