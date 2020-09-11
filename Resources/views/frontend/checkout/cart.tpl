@@ -6,7 +6,7 @@
         {if $noteAboveBasket}
 
             {$shippingDifferenceContent
-                ="<strong>{s name='CartInfoFreeShipping'}{/s}</strong> {s name='CartInfoFreeShippingDifference'}{/s}{s name='CartInfoFreeShippingFillingArticleMessage'}<br><a href=\"#fillingArticles\" title=\"Passende Artikel\">Hier </a> finden Sie passende Artikel dazu{/s}"
+                ="<strong>{s name='CartInfoFreeShipping'}{/s}</strong> {s name='CartInfoFreeShippingDifference'}{/s}{s name='CartInfoFreeShippingFillingArticleMessage'}<br><a href=\"#fillingArticles\" title=\"Passende Artikel\">Hier </a> finden Sie passende Artikel dazu.{/s}"
             }
 
         {else}

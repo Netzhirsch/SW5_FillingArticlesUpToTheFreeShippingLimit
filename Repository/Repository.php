@@ -56,7 +56,7 @@ class Repository
         return $connection->fetchAll($sql);
     }
 
-    public function getProductSteam(QueryBuilder $qb, $productStream)
+    public function getProductStream(QueryBuilder $qb, $productStream)
     {
         return $qb
             ->select('productStream')

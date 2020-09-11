@@ -2,11 +2,11 @@
 
 {block name='frontend_checkout_cart_item_quantity_selection'}
 
-    {if $sBasketItem.MissingAmountToShippingCostFreeBoarder > 0}
-        {$sBasketItem.MissingAmountToShippingCostFreeBoarder}
-        {s name='CartInfoMissingAmountToShippingCostFreeBoarder'}mehr bis {$CartInfoFreeShipping}{/s}
-    {/if}
-
     {$smarty.block.parent}
+
+    {if $sBasketItem.missingAmountToShippingCostFreeBoarder > 0}
+        {$sBasketItem.missingAmountToShippingCostFreeBoarder}
+        {s name='CartInfoMissingAmountToShippingCostFreeBoarder'}weitere bis VSK-frei{/s}
+    {/if}
 
 {/block}

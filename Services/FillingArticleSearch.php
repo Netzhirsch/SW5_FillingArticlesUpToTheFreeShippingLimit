@@ -114,7 +114,7 @@ class FillingArticleSearch
         if (empty($return))
             return $fillingArticles;
 
-        //********* set max top seller ********************************************************************************/
+        //********* set max topseller ********************************************************************************/
         $sLimitChart = $this->config['sCHARTRANGE'];
         if (empty($sLimitChart)) {
             $sLimitChart = 20;
@@ -249,15 +249,15 @@ class FillingArticleSearch
             return $fillingArticleQueryInfos->getFillingArticles();
 
         $repository = new Repository();
-        /** @var ProductStream[] $productSteams */
-        $productSteams = $repository->getProductSteam(
+        /** @var ProductStream[] $productStreams */
+        $productStreams = $repository->getProductStream(
             $this->modelManager->createQueryBuilder(),$pluginInfos['productStream']
         );
 
         $fillingArticles = $fillingArticleQueryInfos->getFillingArticles();
-        if (!empty($productSteams)) {
+        if (!empty($productStreams)) {
 
-            foreach ($productSteams as $productSteam) {
+            foreach ($productStreams as $productStream) {
 
                 //********* to reset we need to do this every product stream ******************************************/
                 $return = $this->createContextAndConditionCriteria(
@@ -265,7 +265,7 @@ class FillingArticleSearch
                 );
                 $criteria = $return['criteria'];
 
-                $this->repositoryInterface->prepareCriteria($criteria, $productSteam->getId());
+                $this->repositoryInterface->prepareCriteria($criteria, $productStream->getId());
                 $variantSearch = $this->variantSearch;
                 $searchQuery = $variantSearch->search($criteria,$return['context']);
                 if (empty($searchQuery))
@@ -453,7 +453,7 @@ class FillingArticleSearch
 
     private function getProductFromVariantSearch($criteria,$context,$fillingArticles) {
 
-        //********* return top seller *********************************************************************************/
+        //********* return topseller *********************************************************************************/
         $variantSearch = $this->variantSearch;
         $searchQuery = $variantSearch->search($criteria,$context);
 

@@ -55,7 +55,7 @@ class MaxOverhangConditionHandler implements ConditionHandlerInterface, Criteria
 
         $key = ':overhang';
 
-        $query->andWhere('(listing_price.cheapest_price - '.$sShippingcostsDifference.')  <= '.$key);
+        $query->andWhere('(listing_price.cheapest_price - '.$sShippingcostsDifference.') <= '.$key);
         $query->setParameter($key, $maximumOverhang);
 
     }

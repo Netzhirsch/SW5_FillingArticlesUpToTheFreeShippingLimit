@@ -147,7 +147,6 @@ class Frontend implements SubscriberInterface
         if (!empty($pluginInfos['noteArticle'])) {
             $noteArticle = true;
             $view->assign(['sBasket' => $sBasket]);
-            $view->assign(['CartInfoFreeShipping' => $this->getCartInfoFreeShipping()]);
         }
 
         $view->assign(['noteArticle' => $noteArticle]);

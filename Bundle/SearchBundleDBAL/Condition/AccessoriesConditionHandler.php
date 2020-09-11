@@ -27,16 +27,16 @@ class AccessoriesConditionHandler implements ConditionHandlerInterface
         ShopContextInterface $context
     ) {
         /** @var AccessoriesCondition $condition */
-        $productId = $condition->getProductIds();
-        $key = ':productId' . md5(json_encode($condition));
+        $productIds = $condition->getProductIds();
+        $key = ':productIds' . md5(json_encode($condition));
         $query
-            ->leftJoin(
+            ->innerJoin(
                 'product',
                 's_articles_relationships',
                 'accessories',
                 'product.id = accessories.articleID')
             ->andWhere('accessories.articleID IN ('.$key.')')
-            ->setParameter($key, $productId)
+            ->setParameter($key, $productIds)
         ;
     }
 }

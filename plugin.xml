@@ -5,10 +5,10 @@
     <label lang="de">Füllartikel bis zur Versandkosten-Freigrenze</label>
     <version>1.0.0</version>
     <compatibility minVersion="5.4" maxVersion="5.7" />
-    <copyright>(c) by netzhirsch Gbr</copyright>
+    <copyright>(c) by Netzhirsch GbR</copyright>
     <license>proprietary</license>
-    <link>https://netzhirsch.de</link>
-    <author>Netzhirsch Gbr</author>
+    <link>https://www.netzhirsch.de</link>
+    <author>Netzhirsch GbR</author>
     <description>
         <![CDATA[
         In the shopping cart, a slider with articles is displayed,
@@ -18,7 +18,7 @@
         The text of the hint can be edited using the text modules, as well as the title of the slider.
         The articles in the slider can be formed from the following groups.
         <ul>
-            <li>top seller</li>
+            <li>topseller</li>
             <li>product stream</li>
             <li>category and/or manufacturer</li>
             <li>customer also bought</li>
@@ -53,10 +53,10 @@
         Unter dem Hinweis zur Versandkosten-Freigrenze kann eine Andeutung auf diesen Slider angezeigt werden.
         In dieser Andeutung ist ein Link integriert,
         der wahlweise zum Slider scrollt oder ein Popup mit Slider einblendet.
-        Der Hinweistext kann über die Textbausteine editiert werden, sowie auch der Titel des Sliders.<br>
+        Der Hinweistext kann über die Textbausteine editiert werden sowie auch der Titel des Sliders.<br>
         Die Artikel im Slider können aus folgenden Gruppen gebildet werden:
         <ul>
-            <li>Top Seller</li>
+            <li>Topseller</li>
             <li>Product Stream</li>
             <li>Kategorie und/oder Hersteller</li>
             <li>Kunden kauften auch</li>

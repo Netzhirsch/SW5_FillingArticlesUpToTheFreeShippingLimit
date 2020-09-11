@@ -36,7 +36,7 @@ class DataFromAssignTest extends Enlight_Components_Test_Controller_TestCase
         }
         foreach ($basket['content'] as $key => $article) {
             $return = $articleFromAssign->assignMissingAmountToShippingCostFreeBoarder($basket,$article['price']);
-            $this->assertEquals(1.0, $return['content'][$key]['MissingAmountToShippingCostFreeBoarder'],$key);
+            $this->assertEquals(1.0, $return['content'][$key]['missingAmountToShippingCostFreeBoarder'],$key);
         }
     }
 

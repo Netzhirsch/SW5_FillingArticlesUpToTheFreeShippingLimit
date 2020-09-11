@@ -12,7 +12,7 @@ class DataFromAssign
         foreach ($sBasket['content'] as &$articleFromBasket) {
             if ($articleFromBasket['price'] > 0) {
                 $amount = ceil($sShippingcostsDifference / $articleFromBasket['price']);
-                $articleFromBasket['MissingAmountToShippingCostFreeBoarder'] = $amount;
+                $articleFromBasket['missingAmountToShippingCostFreeBoarder'] = $amount;
             }
         }
         return $sBasket;
