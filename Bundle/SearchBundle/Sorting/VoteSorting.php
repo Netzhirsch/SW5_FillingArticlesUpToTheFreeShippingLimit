@@ -1,6 +1,5 @@
 <?php
 
-
 namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Sorting;
 
 use Shopware\Bundle\SearchBundle\Sorting\Sorting;

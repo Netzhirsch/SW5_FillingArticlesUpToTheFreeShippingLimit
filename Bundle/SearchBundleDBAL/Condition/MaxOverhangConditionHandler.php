@@ -1,8 +1,6 @@
 <?php
 
-
 namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundleDBAL\Condition;
-
 
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\MaxOverhangCondition;
 use Shopware\Bundle\SearchBundle\ConditionInterface;
@@ -59,8 +57,6 @@ class MaxOverhangConditionHandler implements ConditionHandlerInterface, Criteria
 
         $query->andWhere('(listing_price.cheapest_price - '.$sShippingcostsDifference.')  <= '.$key);
         $query->setParameter($key, $maximumOverhang);
-
-        return;
 
     }
 

@@ -13,7 +13,7 @@ class MaxOverhangCondition implements ConditionInterface
     /**
      * @param float[] $data
      */
-    public function __construct($data)
+    public function __construct(array $data)
     {
         $this->data = $data;
     }
@@ -34,9 +34,6 @@ class MaxOverhangCondition implements ConditionInterface
         return $this->data;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function jsonSerialize()
     {
         return get_object_vars($this);

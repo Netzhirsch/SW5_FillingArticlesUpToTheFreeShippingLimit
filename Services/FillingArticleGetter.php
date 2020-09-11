@@ -56,7 +56,7 @@ class FillingArticleGetter
         $pluginInfos,$sShippingcostsDifference,$sBasket
     ): FillingArticleQueryInfos
     {
-        //********* shopware 5.2 save names in excludedArticles 5.6 id ************************************************/
+        //********* shopware 5.2 save names in excludedArticles 5.6 ids ************************************************/
         $excludedArticlesByNames = [];
         $excludedArticlesByIds = [];
         //********* exlude articles by plugin setting *****************************************************************/

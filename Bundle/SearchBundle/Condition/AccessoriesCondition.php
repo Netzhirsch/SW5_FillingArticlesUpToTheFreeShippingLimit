@@ -23,7 +23,7 @@ class AccessoriesCondition implements ConditionInterface, JsonSerializable
      * @param array $productIds
      * @param string $productName
      */
-    public function __construct($productIds, $productName)
+    public function __construct(array $productIds, string $productName)
     {
         $this->productIds = $productIds;
         $this->productName = $productName;

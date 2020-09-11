@@ -4,7 +4,7 @@ namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\
 
 use Shopware\Bundle\SearchBundle\ConditionInterface;
 
-class CombineContion implements ConditionInterface
+class CombineCondition implements ConditionInterface
 {
     private const NAME = 'sShippingcostsDifference';
 
@@ -34,9 +34,6 @@ class CombineContion implements ConditionInterface
         return $this->sShippingcostsDifference;
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function jsonSerialize()
     {
         return get_object_vars($this);

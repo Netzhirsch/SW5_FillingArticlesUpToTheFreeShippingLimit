@@ -22,9 +22,13 @@
     {/if}
 
 {/block}
+
 {block name='frontend_checkout_cart_premium'}
+
         {block name='frontend_checkout_cart_promotion'}
+
             {if !empty($fillingArticles)}
+
                 {if $displayVariants == 'popup' || $displayVariants == 'scroll out'}
                     {$netzhirschFillingArticlesUpToTheFreeShippingLimitHidden
                     = 'netzhirsch_filling_articles_up_to_the_free_shipping_limit--hidden' }
@@ -35,7 +39,10 @@
                         {include file="frontend/_includes/product_slider.tpl"}
                     </div>
                 </div>
+
             {/if}
+
         {/block}
+
         {$smarty.block.parent}
 {/block}

@@ -13,11 +13,13 @@ $(document).ready(function () {
         }
     });
 
+    // check if slider needs to add after removing an article
     $.subscribe('plugin/swCollapseCart/onRemoveArticleFinished', function() {
         addArticleToAjaxCart();
         fillingArticleSlider();
     });
 
+    // check if slider needs to add after adding an article (voucher is an article)
     $.subscribe('plugin/swCollapseCart/onArticleAdded', function() {
         addArticleToAjaxCart();
         fillingArticleSlider();

@@ -3,7 +3,6 @@
 
 namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition;
 
-
 use JsonSerializable;
 use Shopware\Bundle\SearchBundle\ConditionInterface;
 

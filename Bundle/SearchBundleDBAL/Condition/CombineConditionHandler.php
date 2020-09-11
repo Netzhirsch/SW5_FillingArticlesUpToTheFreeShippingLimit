@@ -1,10 +1,8 @@
 <?php
 
-
 namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundleDBAL\Condition;
 
-
-use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\CombineContion;
+use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\CombineCondition;
 use Shopware\Bundle\SearchBundle\ConditionInterface;
 use Shopware\Bundle\SearchBundle\Criteria;
 use Shopware\Bundle\SearchBundleDBAL\ConditionHandlerInterface;
@@ -37,7 +35,7 @@ class CombineConditionHandler implements ConditionHandlerInterface, CriteriaAwar
      */
     public function supportsCondition(ConditionInterface $condition)
     {
-        return $condition instanceof CombineContion;
+        return $condition instanceof CombineCondition;
     }
 
     /**
@@ -52,11 +50,9 @@ class CombineConditionHandler implements ConditionHandlerInterface, CriteriaAwar
 
         $key = ':sShippingcostsDifference' . md5(json_encode($condition));
 
-        /** @var CombineContion $condition */
+        /** @var CombineCondition $condition */
         $query->andWhere('listing_price.cheapest_price >= '.$key);
         $query->setParameter($key, $condition->getShopwareShippingcostsDifference());
-
-        return;
 
     }
 

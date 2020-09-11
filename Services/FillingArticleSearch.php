@@ -5,7 +5,7 @@ namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit\Services;
 
 
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Struct\FillingArticleQueryInfos;
-use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\CombineContion;
+use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\CombineCondition;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\MaxOverhangCondition;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\NotInArticleIdsCondition;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\NotInArticleNamesCondition;
@@ -280,7 +280,8 @@ class FillingArticleSearch
                 if (empty($articleFromProductStream))
                     return $fillingArticleQueryInfos->getFillingArticles();
 
-                $fillingArticles = array_merge($fillingArticleQueryInfos->getFillingArticles(),$articleFromProductStream);
+                $fillingArticles
+                    = array_merge($fillingArticleQueryInfos->getFillingArticles(),$articleFromProductStream);
             }
         }
 
@@ -372,7 +373,7 @@ class FillingArticleSearch
 
         //********* combine condition *********************************************************************************/
         if (!$pluginInfos['isCombineAllowed'])
-            $criteria->addCondition(new CombineContion($sShippingcostsDifference));
+            $criteria->addCondition(new CombineCondition($sShippingcostsDifference));
 
         //********* maximun overhang condition ************************************************************************/
         if (!empty($pluginInfos['maximumOverhang'])) {

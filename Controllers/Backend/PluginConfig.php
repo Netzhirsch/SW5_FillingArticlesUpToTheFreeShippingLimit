@@ -3,7 +3,9 @@
 use Shopware\Bundle\SitemapBundle\UrlFilter\Product;
 use Shopware\Components\CSRFWhitelistAware;
 
-class Shopware_Controllers_Backend_PluginConfig extends Shopware_Controllers_Backend_Application implements CSRFWhitelistAware
+class Shopware_Controllers_Backend_PluginConfig
+    extends Shopware_Controllers_Backend_Application
+    implements CSRFWhitelistAware
 {
 //    model must be set even if none is used.
     protected $model = Product::class;

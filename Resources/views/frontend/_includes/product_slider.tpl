@@ -2,7 +2,6 @@
 
 {block name="frontend_common_product_slider_container"}
 
-
     {$CartFreeShippingFillingArticleMessageSliderTitel
         = "{s name='CartFreeShippingFillingArticleMessageSliderTitel'}Füllartikel{/s}"}
 

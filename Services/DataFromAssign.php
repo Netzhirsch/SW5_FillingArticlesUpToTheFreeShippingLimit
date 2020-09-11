@@ -1,8 +1,6 @@
 <?php
 
-
 namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit\Services;
-
 
 class DataFromAssign
 {
