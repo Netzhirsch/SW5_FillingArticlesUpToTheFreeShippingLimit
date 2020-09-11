@@ -1,7 +1,7 @@
 {
     "name": "netzhirsch/filling-articles-up-to-the-free-shipping-limit",
     "type": "composer-plugin",
-    "license": "MIT",
+    "license": "proprietary",
     "authors": [
         {
             "name": "netzhirsch",

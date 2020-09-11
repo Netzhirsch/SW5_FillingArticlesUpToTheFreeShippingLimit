@@ -1,4 +1,5 @@
 <?php
+
 namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit\Subscriber;
 
 use Doctrine\Common\Collections\ArrayCollection;

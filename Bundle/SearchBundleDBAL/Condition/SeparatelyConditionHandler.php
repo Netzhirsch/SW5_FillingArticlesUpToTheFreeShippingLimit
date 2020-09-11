@@ -1,8 +1,6 @@
 <?php
 
-
 namespace NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundleDBAL\Condition;
-
 
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\SeparatelyCondition;
 use Shopware\Bundle\SearchBundle\ConditionInterface;
