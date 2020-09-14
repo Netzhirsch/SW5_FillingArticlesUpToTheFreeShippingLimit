@@ -20,7 +20,7 @@
         </element>
         <element scope="shop" type="boolean">
             <name>viewInAjaxBasket</name>
-            <label>also in ajax basket</label>
+            <label>Also in ajax basket</label>
             <label lang="de">Anzeige im Ajax-Warenkorb</label>
         </element>
         <element scope="shop" type="combo">
@@ -31,12 +31,12 @@
             <store>
                 <option>
                     <value>show under the basket</value>
-                    <label>show under the basket</label>
+                    <label>Show under the basket</label>
                     <label lang="de">Anzeige unter dem Warenkorb</label>
                 </option>
                 <option>
                     <value>popup</value>
-                    <label>popup</label>
+                    <label>Popup</label>
                     <label lang="de">Popup</label>
                 </option>
             </store>
@@ -44,7 +44,7 @@
         <element scope="shop" type="number">
             <name>maxArticle</name>
             <label lang="de">Maximale Artikel-Anzahl im Slider</label>
-            <label>maximum number of articles in the slider</label>
+            <label>Maximum number of articles in the slider</label>
             <value>20</value>
             <options>
                 <minValue>1</minValue>
@@ -53,14 +53,14 @@
         <element scope="shop" type="boolean">
             <name>isCombineAllowed</name>
             <label lang="de">Kombinationen</label>
-            <label>combinations</label>
+            <label>Combinations</label>
             <description lang="de">Auch Füllartikel anzeigen, die alleine nicht die Versandkosten-Freigrenze erreichen.</description>
             <description>Also show filling articles which alone do not reach the free shipping limit.</description>
         </element>
         <element scope="shop" type="number">
             <name>minimumArticlePrice</name>
             <label lang="de">Minimaler Artikelpreis</label>
-            <label>minimum article price</label>
+            <label>Minimum article price</label>
             <description lang="de">Minimaler Preis für Artikel, die alleine nicht die Versandkosten-Freigrenze erreichen.</description>
             <description>Minimum price for articles which alone do not reach the free shipping limit.</description>
             <options>
@@ -87,7 +87,7 @@
         <element scope="shop" type="number">
             <name>maximumArticlePrice</name>
             <label lang="de">Maximaler Artikelpreis</label>
-            <label>maximum article price</label>
+            <label>Maximum article price</label>
             <description lang="de">Maximaler Preis für Artikel, die alleine nicht die Versandkosten-Freigrenze erreichen.</description>
             <description>maximum price for articles which alone do not reach the free shipping limit.</description>
             <options>
@@ -97,7 +97,7 @@
         <element scope="shop" type="combo">
             <name>maximumArticlePriceUnit</name>
             <label lang="de">Maximaler Artikelpreis Einheit</label>
-            <label>maximum price unit</label>
+            <label>Maximum price unit</label>
             <description lang="de">Die Prozentangabe bezieht sich auf den fehlenden Restbetrag zur Versandkosten-Freigrenze.</description>
             <description>The percentage refers to the missing balance to the shipping cost exemption limit.</description>
             <store>
@@ -114,7 +114,7 @@
         <element scope="shop" type="number">
             <name>maximumOverhang</name>
             <label lang="de">Maximaler Überhang über die VSKFG in Euro</label>
-            <label>maximum overhang over the VSKFG in Euro</label>
+            <label>Maximum overhang over the VSKFG in Euro</label>
             <description lang="de">Um wie viel Euro darf der Füllartikel die Versandkosten-Freigrenze (VSKFG) maximal überschreiten?</description>
             <description>By how much euro may the filling article the forwarding expenses free border (VSKFG) maximally exceed?</description>
             <options>
@@ -123,7 +123,7 @@
         </element>
         <element scope="shop" type="select">
             <name>excludedArticles</name>
-            <label>exclude articles</label>
+            <label>Exclude articles</label>
             <label lang="de">Artikel ausschließen</label>
             <description lang="de">Diese Artikel werden nicht Füllartikel berücksichtigt.</description>
             <description>These articles are not considered filling articles.</description>
@@ -134,7 +134,7 @@
         </element>
         <element scope="shop" type="select">
             <name>variantsGroup</name>
-            <label>exclude variant groups</label>
+            <label>Exclude variant groups</label>
             <label lang="de">Varianten-Gruppen ausschließen</label>
             <description lang="de">Wählen Sie z.B. Größe um zu verhindert, dass Füllartikel der Größe S vorgeschlagen werden, wenn im Warenkorb Artikel der Größe XL liegen.</description>
             <description>Choose e.g. size to avoid that filling articles of size S are suggested if the shopping cart contains articles of size XL.</description>
@@ -145,6 +145,9 @@
                     { name:'id', type: 'int' },
                     { name:'name', type: 'string' }
                 ],
+                data : [
+                     {id: 1,   name: '""'}
+                 ],
                 autoLoad: false,
                 pageSize: 25,
                 proxy: {
@@ -173,49 +176,49 @@
             <store>
                 <option>
                     <value>randomly</value>
-                    <label>randomly</label>
+                    <label>Randomly</label>
                     <label lang="de">Zufällig</label>
                 </option>
                 <option>
                     <value>price ascending</value>
-                    <label>price ascending</label>
+                    <label>Price ascending</label>
                     <label lang="de">Preis aufsteigend</label>
                 </option>
                 <option>
                     <value>price descending</value>
-                    <label>price descending</label>
+                    <label>Price descending</label>
                     <label lang="de">Preis absteigend</label>
                 </option>
                 <option>
                     <value>votes descending</value>
-                    <label>votes descending</label>
+                    <label>Votes descending</label>
                     <label lang="de">Bewertungen absteigend</label>
                 </option>
                 <option>
                     <value>stock ascending</value>
-                    <label>stock ascending</label>
+                    <label>Stock ascending</label>
                     <label lang="de">Lagerbestand aufsteigend</label>
                 </option>
                 <option>
                     <value>stock descending</value>
-                    <label>stock descending</label>
+                    <label>Stock descending</label>
                     <label lang="de">Lagerbestand absteigend</label>
                 </option>
                 <option>
                     <value>popularity ascending</value>
-                    <label>popularity ascending</label>
+                    <label>Popularity ascending</label>
                     <label lang="de">Beliebtheit aufsteigend</label>
                 </option>
                 <option>
                     <value>popularity descending</value>
-                    <label>popularity descending</label>
+                    <label>Popularity descending</label>
                     <label lang="de">Beliebtheit absteigend</label>
                 </option>
             </store>
         </element>
         <element scope="shop" type="button">
             <name>fillingArticleSeparator</name>
-            <label>filling articles filter</label>
+            <label>Filling articles filter</label>
             <label lang="de">Füllartikel Filter</label>
         </element>
         <element scope="shop" type="boolean">
@@ -228,7 +231,7 @@
         </element>
         <element scope="shop" type="select">
             <name>productStream</name>
-            <label>product stream</label>
+            <label>Product stream</label>
             <label lang="de">Product Streams berücksichtigen</label>
             <description lang="de">Füllartikel ausschließlich aus diesen Product Streams wählen.</description>
             <description>Choose filling articles exclusively from these product streams.</description>
@@ -239,6 +242,9 @@
                     { name:'id', type: 'int' },
                     { name:'name', type: 'string' }
                 ],
+                data : [
+                     {id: 1,   name: '""'}
+                 ],
                 autoLoad: false,
                 pageSize: 25,
                 proxy: {
