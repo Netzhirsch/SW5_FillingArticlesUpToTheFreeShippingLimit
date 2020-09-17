@@ -40,7 +40,6 @@ class PluginConfigTest extends TestCase
             'maximumOverhang',
             'sorting',
             'excludedArticles',
-            'variantsGroup',
             'fillingArticleSeparator',
             'productStream',
             'consider',
