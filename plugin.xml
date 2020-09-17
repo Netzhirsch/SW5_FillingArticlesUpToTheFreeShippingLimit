@@ -32,7 +32,6 @@
             <li>Minimum article price (€ or % to the shipping cost exemption limit)</li>
             <li>Maximum overhang over the free shipping limit</li>
             <li>Exclude article</li>
-            <li>Exclude variant groups</li>
         </ul>
         <p>The articles can be sorted as follows:</p>
         <ul>
@@ -72,7 +71,6 @@
             <li>Maximaler Artikelpreis (€ oder % zur Versandkosten-Freigrenze)</li>
             <li>Maximaler Überhang über die Versandkosten-Freigrenze</li>
             <li>Artikel ausschließen</li>
-            <li>Varianten-Gruppen ausschließen</li>
         </ul>
         Die Artikel können wie folgt sortiert werden:
         <ul>
