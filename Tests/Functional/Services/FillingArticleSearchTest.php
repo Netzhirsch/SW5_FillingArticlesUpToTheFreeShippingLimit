@@ -119,6 +119,108 @@ class FillingArticleSearchTest extends Enlight_Components_Test_Controller_TestCa
         $pluginInfos['consider'] = 'category';
     }
 
+    /**
+     * @param float $shippingcosts
+     * @param array $articles
+     * @param FillingArticleSearch $fillingArticlesRepository
+     * @param array $pluginInfos
+     * @param string $filtername
+     */
+    public function filterTest(
+        float $shippingcosts,
+        array $articles,
+        FillingArticleSearch $fillingArticlesRepository,
+        array $pluginInfos,
+        string $filtername
+    ) {
+        $excludedArticles = $articles;
+        foreach ($excludedArticles as $excludedArticle) {
+            $pluginInfos['excludedArticles'] = [$excludedArticle->getId()];
+
+            foreach ($articles as $article) {
+
+                if ($article->getMainDetail()->getShippingFree()) {
+                    continue;
+                }
+
+                $articlePrice = round($article->getMainDetail()->getPrices()[0]->getPrice(),2);
+                $articleTax = (int)$article->getTax()->getTax();
+                $percent = $articlePrice / 100;
+                $percent *= $articleTax;
+                $articlePrice += $percent;
+                $articlePrice = round($articlePrice,2);
+                $sShippingcostsDifference = $shippingcosts - $articlePrice;
+
+                if ($sShippingcostsDifference > 0) {
+                    $fillingArticles = [];
+                    $id = $article->getId();
+
+                    $fillingArticleQueryInfos = new FillingArticleQueryInfos(
+                        $pluginInfos,
+                        $sShippingcostsDifference,
+                        [$article->getSupplier()->getId()],
+                        [0 => $id],
+                        [],
+                        [],
+                        $fillingArticles
+                    );
+
+                    $fillingArticleQueryInfos->addFillingArticles(
+                        $this->topSeller(
+                            $fillingArticlesRepository,
+                            $fillingArticleQueryInfos,
+                            $filtername,
+                            $id
+                        )
+                    );
+
+                    $fillingArticleQueryInfos->addFillingArticles(
+                        $this->productStreams(
+                            $fillingArticlesRepository,
+                            $fillingArticleQueryInfos,
+                            $filtername
+                        )
+                    );
+
+                    $fillingArticleQueryInfos->addFillingArticles(
+                        $this->categoryManufacture(
+                            $fillingArticlesRepository,
+                            $fillingArticleQueryInfos
+                        )
+                    );
+
+                    $fillingArticleQueryInfos->addFillingArticles(
+                        $this->alsoBought(
+                            $fillingArticlesRepository,
+                            $fillingArticleQueryInfos
+                        )
+                    );
+
+                    $fillingArticleQueryInfos->addFillingArticles(
+                        $this->accessories(
+                            $fillingArticlesRepository,
+                            $fillingArticleQueryInfos
+                        )
+                    );
+
+                    $fillingArticleQueryInfos->addFillingArticles(
+                        $this->similarArticles(
+                            $fillingArticlesRepository,
+                            $fillingArticleQueryInfos,
+                            $shippingcosts
+                        )
+                    );
+                    $fillingArticles = $fillingArticleQueryInfos->getFillingArticles();
+                    if (!empty($fillingArticles)) {
+                        $sortingTest = new Sorting();
+                        $sortingTest->sorting($pluginInfos,$fillingArticlesRepository,$fillingArticles);
+                    }
+                }
+            }
+        }
+
+    }
+
     private function accessories(
         FillingArticleSearch $fillingArticlesRepository,
         FillingArticleQueryInfos $fillingArticleQueryInfos
@@ -149,7 +251,8 @@ class FillingArticleSearchTest extends Enlight_Components_Test_Controller_TestCa
     private function topSeller(
         FillingArticleSearch $fillingArticlesRepository,
         FillingArticleQueryInfos $fillingArticleQueryInfos,
-        $filtername
+        $filtername,
+        $id
     ) {
         $fillingArticleQueryInfos->addFillingArticles(
             $fillingArticlesRepository->getFillingArticlesFromTopSeller($fillingArticleQueryInfos)
@@ -176,7 +279,7 @@ class FillingArticleSearchTest extends Enlight_Components_Test_Controller_TestCa
                 $sShippingcostsDifference.' erreichen. Mit dem Filter'.$filtername
             );
         }
-
+        $this->excludesArticles($fillingArticleQueryInfos,$id);
         return $fillingArticles;
     }
 
@@ -342,7 +445,6 @@ class FillingArticleSearchTest extends Enlight_Components_Test_Controller_TestCa
             'maximumOverhang' => null,
             'sorting' => 'randomly',
             'excludedArticles' => null,
-            'variantsGroup' => null,
             'productStream' => null,
             'consider' => "",
             'customersAlsoBought' => 0,
@@ -352,99 +454,7 @@ class FillingArticleSearchTest extends Enlight_Components_Test_Controller_TestCa
         ];
     }
 
-    /**
-     * @param float $shippingcosts
-     * @param array $articles
-     * @param FillingArticleSearch $fillingArticlesRepository
-     * @param array $pluginInfos
-     * @param string $filtername
-     */
-    public function filterTest(
-        float $shippingcosts,
-        array $articles,
-        FillingArticleSearch $fillingArticlesRepository,
-        array $pluginInfos,
-        string $filtername
-    ) {
-        foreach ($articles as $article) {
 
-            if ($article->getMainDetail()->getShippingFree()) {
-                continue;
-            }
-
-            $id = $article->getId();
-            $articlePrice = round($article->getMainDetail()->getPrices()[0]->getPrice(),2);
-            $articleTax = (int)$article->getTax()->getTax();
-            $percent = $articlePrice / 100;
-            $percent *= $articleTax;
-            $articlePrice += $percent;
-            $articlePrice = round($articlePrice,2);
-            $sShippingcostsDifference = $shippingcosts - $articlePrice;
-            $fillingArticles = [];
-            if ($sShippingcostsDifference > 0) {
-
-                $fillingArticleQueryInfos = new FillingArticleQueryInfos(
-                    $pluginInfos,
-                    $sShippingcostsDifference,
-                    [$article->getSupplier()->getId()],
-                    [0 => $id],
-                    [],
-                    [],
-                    $fillingArticles
-                );
-
-                $fillingArticleQueryInfos->addFillingArticles(
-                    $this->topSeller(
-                        $fillingArticlesRepository,
-                        $fillingArticleQueryInfos,
-                        $filtername
-                    )
-                );
-
-                $fillingArticleQueryInfos->addFillingArticles(
-                    $this->productStreams(
-                        $fillingArticlesRepository,
-                        $fillingArticleQueryInfos,
-                        $filtername
-                    )
-                );
-
-                $fillingArticleQueryInfos->addFillingArticles(
-                    $this->categoryManufacture(
-                        $fillingArticlesRepository,
-                        $fillingArticleQueryInfos
-                    )
-                );
-
-                $fillingArticleQueryInfos->addFillingArticles(
-                    $this->alsoBought(
-                        $fillingArticlesRepository,
-                        $fillingArticleQueryInfos
-                    )
-                );
-
-                $fillingArticleQueryInfos->addFillingArticles(
-                    $this->accessories(
-                        $fillingArticlesRepository,
-                        $fillingArticleQueryInfos
-                    )
-                );
-
-                $fillingArticleQueryInfos->addFillingArticles(
-                    $this->similarArticles(
-                        $fillingArticlesRepository,
-                        $fillingArticleQueryInfos,
-                        $shippingcosts
-                    )
-                );
-                $fillingArticles = $fillingArticleQueryInfos->getFillingArticles();
-                if (!empty($fillingArticles)) {
-                    $sortingTest = new Sorting();
-                    $sortingTest->sorting($pluginInfos,$fillingArticlesRepository,$fillingArticles);
-                }
-            }
-        }
-    }
 
     private function alsoBought(
         FillingArticleSearch $fillingArticlesRepository,
@@ -504,5 +514,19 @@ class FillingArticleSearchTest extends Enlight_Components_Test_Controller_TestCa
             }
         }
         return $fillingArticles;
+    }
+
+    private function excludesArticles(FillingArticleQueryInfos $fillingArticleQueryInfos,$basketArticleId)
+    {
+        $excludedArticles = $fillingArticleQueryInfos->getPluginInfos()['excludedArticles'];
+        foreach ($fillingArticleQueryInfos->getFillingArticles() as $fillingArticle) {
+
+            ;
+                $this->assertFalse(
+                    in_array($fillingArticle['articleID'],$excludedArticles)
+                    ,'Artikel Id:'.$fillingArticle['articleID'].' ist ein Füllartikel obwohl:'.
+                    implode(',',$excludedArticles).' beim warenkorb ArtikelId: '.$basketArticleId
+                );
+        }
     }
 }

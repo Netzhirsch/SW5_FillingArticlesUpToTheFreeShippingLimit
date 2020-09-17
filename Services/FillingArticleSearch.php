@@ -8,7 +8,6 @@ use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Struct\FillingArticleQuery
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\CombineCondition;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\MaxOverhangCondition;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\NotInArticleIdsCondition;
-use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\NotInArticleNamesCondition;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Condition\SeparatelyCondition;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Bundle\SearchBundle\Sorting\VoteSorting;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Repository\Repository;
@@ -305,7 +304,6 @@ class FillingArticleSearch
         $criteria = $return['criteria'];
 
         //********* categories and suppliers condition ****************************************************************/
-        $idFromAssign = $this->idFromAssign;
         $pluginInfos = $fillingArticleQueryInfos->getPluginInfos();
         switch ($pluginInfos['consider']) {
             case 'category':
@@ -321,7 +319,7 @@ class FillingArticleSearch
                     new CategoryCondition($this->getCategoryIdsFromArticleIds(
                         $fillingArticleQueryInfos->getArticleIdsFromBasket())
                     ),
-                    new ManufacturerCondition($idFromAssign->getSupplierIdsFromBasket(
+                    new ManufacturerCondition($this->idFromAssign->getSupplierIdsFromBasket(
                         $fillingArticleQueryInfos->getSupplierIds())
                     )
                 ]));
@@ -361,15 +359,18 @@ class FillingArticleSearch
         $criteria->offset(0)
             ->limit($pluginInfos['maxArticle']);
 
-
-        //********* exlude article conditions shopware 5.2 use name ***************************************************/
-        if (empty($articlesInBasketNames)) {
+        if (!empty($fillingArticleQueryInfos->getArticleIdsFromBasket())) {
             $criteria->addBaseCondition(new NotInArticleIdsCondition(
                 $fillingArticleQueryInfos->getArticleIdsFromBasket())
             );
-        } else {
-            $criteria->addBaseCondition(new NotInArticleNamesCondition($articlesInBasketNames));
         }
+
+        if (!empty($pluginInfos['excludedArticles'])) {
+            $criteria->addCondition(
+                new NotInArticleIdsCondition($pluginInfos['excludedArticles'])
+            );
+        }
+
         $this->addPriceCondition($pluginInfos, $sShippingcostsDifference, $criteria);
 
         //********* combine condition *********************************************************************************/
