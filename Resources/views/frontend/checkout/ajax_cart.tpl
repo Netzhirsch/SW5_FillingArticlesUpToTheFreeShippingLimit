@@ -2,7 +2,7 @@
 
 {block name='frontend_checkout_ajax_cart'}
 
-    {if $sShippingcostsDifference > 0 && $viewInAjaxBasket == 1}
+    {if $sShippingcostsDifference > 0 && $viewInAjaxBasket == 1 && !empty($fillingArticles)}
 
         {include file="frontend/_includes/messages.tpl" type="warning" content="{$message|cat}"}
 
