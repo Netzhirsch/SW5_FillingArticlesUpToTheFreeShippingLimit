@@ -10,7 +10,6 @@ use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Services\DataFromAssign;
 use NetzhirschFillingArticlesUpToTheFreeShippingLimit\Services\FillingArticleGetter;
 use Shopware\Bundle\StoreFrontBundle\Service\Core\ContextService;
 use Shopware\Components\Plugin\ConfigReader;
-use Shopware\Components\Theme\LessDefinition;
 use Shopware_Components_Snippet_Manager;
 
 class Frontend implements SubscriberInterface
@@ -74,23 +73,9 @@ class Frontend implements SubscriberInterface
     public static function getSubscribedEvents()
     {
         return [
-            'Theme_Compiler_Collect_Plugin_Less' => 'addLessFile',
             'Theme_Compiler_Collect_Plugin_Javascript' => 'addJsFile',
             'Enlight_Controller_Action_PostDispatchSecure_Frontend_Checkout' => 'onPostDispatch',
         ];
-    }
-
-    public function addLessFile()
-    {
-        $less = new LessDefinition(array(),
-            array(
-                $this->pluginDirectory .
-                    '/Resources/views/frontend/_public/src/less/netzhirschFillingArticlesUpToTheFreeShippingLimit.less'
-            ), __DIR__);
-
-        return new ArrayCollection(array(
-            $less
-        ));
     }
 
     public function addJsFile()

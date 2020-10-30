@@ -30,7 +30,7 @@ $(document).ready(function () {
         event.preventDefault();
         let fillingArticlesContainer = $('#fillingArticles');
         // display variante popup
-        if (fillingArticlesContainer.hasClass('netzhirsch_filling_articles_up_to_the_free_shipping_limit--hidden')) {
+        if (fillingArticlesContainer.hasClass('is--hidden')) {
             let content = fillingArticlesContainer.html();
             $.modal.open(content, {
                 overlay: true,
